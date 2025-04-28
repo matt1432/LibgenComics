@@ -4,14 +4,13 @@ with open("README.md", "r", errors="replace") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="libgen_api_enhanced",
-    packages=["libgen_api_enhanced"],
+    name="libgen_api_comicvine",
+    packages=["libgen_api_comicvine"],
     version="1.0.5",
     description="Search Library genesis by Title or Author",
     long_description_content_type="text/markdown",
     long_description=long_description,
-    url="https://github.com/onurhanak/libgen-api-enhanced",
-    author="Onurhan Ak",
+    url="https://github.com/matt1432/libgen-api-comicvine",
     author_email="",
     license="MIT",
     classifiers=[
