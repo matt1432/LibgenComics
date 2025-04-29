@@ -32,11 +32,41 @@
     overlays.default = final: prev: {
       python3Packages = prev.python3Packages.override {
         overrides = pyFinal: pyPrev: {
+          pycomicvine = pyFinal.callPackage ({
+            # nix build inputs
+            buildPythonPackage,
+            fetchFromGitHub,
+            # python deps
+            simplejson,
+            python-dateutil,
+            ...
+          }:
+            buildPythonPackage {
+              pname = "pycomicvine";
+              version = "1.0.0";
+
+              format = "setuptools";
+
+              src = fetchFromGitHub {
+                owner = "miri64";
+                repo = "pycomicvine";
+                rev = "bfc72ceb585c7d63bd5c603a51e838f81ce2d348";
+                hash = "sha256-vfqfcR4qFK9exLv727ppEJLEpwwGMd/xnLuMF6mXeP4=";
+              };
+
+              postPatch = ''
+                substituteInPlace ./setup.py --replace-fail "**extra" ""
+              '';
+
+              dependencies = [simplejson python-dateutil];
+            }) {};
+
           libgen-api-comicvine = pyFinal.callPackage ({
             # nix build inputs
             buildPythonPackage,
             # python deps
             beautifulsoup4,
+            pycomicvine,
             requests,
             ...
           }: let
@@ -52,6 +82,7 @@
               src = ./.;
               dependencies = [
                 beautifulsoup4
+                pycomicvine
                 requests
               ];
             }) {};
@@ -71,12 +102,14 @@
       default = pkgs.mkShell {
         packages = with pkgs; [
           alejandra
-          (python3Packages.python.withPackages (ps: with python3Packages; [
-            beautifulsoup4
-            libgen-api-comicvine
-            pytest
-            requests
-          ]))
+          (python3Packages.python.withPackages (ps:
+            with python3Packages; [
+              beautifulsoup4
+              libgen-api-comicvine
+              pycomicvine
+              pytest
+              requests
+            ]))
         ];
       };
     });

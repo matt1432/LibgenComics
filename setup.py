@@ -20,5 +20,5 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
     ],
     keywords=["libgen search", "libgen api", "search libgen", "search library genesis"],
-    install_requires=["bs4", "requests"],
+    install_requires=["bs4", "pycomicvine", "requests"],
 )

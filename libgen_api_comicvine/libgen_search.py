@@ -2,6 +2,10 @@ from .search_request import SearchRequest
 import requests
 from bs4 import BeautifulSoup
 
+import collections.abc
+collections.Iterable = collections.abc.Iterable
+import pycomicvine
+
 MIRROR_SOURCES = ["GET", "Cloudflare", "IPFS.io", "Infura"]
 
 
@@ -9,7 +13,7 @@ class LibgenSearch:
     def search_default(self, query):
         search_request = SearchRequest(query, search_type="default")
         return search_request.aggregate_request_data()
-    
+
     def search_default_filtered(self, query, filters, exact_match=False):
         search_request = SearchRequest(query, search_type="default")
         results = search_request.aggregate_request_data()
@@ -17,7 +21,7 @@ class LibgenSearch:
             results=results, filters=filters, exact_match=exact_match
         )
         return filtered_results
-    
+
     def search_title(self, query):
         search_request = SearchRequest(query, search_type="title")
         return search_request.aggregate_request_data()
@@ -41,6 +45,16 @@ class LibgenSearch:
             results=results, filters=filters, exact_match=exact_match
         )
         return filtered_results
+
+    def search_comicvine_id(self, id, issue):
+        volume = pycomicvine.Volume(id, all=True)
+
+        print(volume.site_detail_url)
+
+        return self.search_title_filtered(
+            volume.name,
+            {"Year": str(volume.start_year), "Publisher": volume.publisher.name},
+            exact_match=True)
 
 
 
