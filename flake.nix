@@ -12,12 +12,20 @@
       owner = "nix-systems";
       repo = "default-linux";
     };
+
+    treefmt-nix = {
+      type = "github";
+      owner = "numtide";
+      repo = "treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     self,
     systems,
     nixpkgs,
+    treefmt-nix,
     ...
   }: let
     perSystem = attrs:
@@ -29,9 +37,9 @@
           ];
         }));
   in {
-    overlays.default = final: prev: {
+    overlays.default = _final: prev: {
       python3Packages = prev.python3Packages.override {
-        overrides = pyFinal: pyPrev: {
+        overrides = pyFinal: _pyPrev: {
           pycomicvine = pyFinal.callPackage ({
             # nix build inputs
             buildPythonPackage,
@@ -96,14 +104,17 @@
       default = pkgs.python3Packages.libgen-api-comicvine;
     });
 
-    formatter = perSystem (pkgs: pkgs.alejandra);
+    formatter = perSystem (pkgs: let
+      treefmtEval = treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
+    in
+      treefmtEval.config.build.wrapper);
 
     devShells = perSystem (pkgs: {
       default = pkgs.mkShell {
         packages = with pkgs; [
           alejandra
 
-          (python3Packages.python.withPackages (ps:
+          (python3Packages.python.withPackages (_ps:
             with python3Packages; [
               beautifulsoup4
               libgen-api-comicvine
