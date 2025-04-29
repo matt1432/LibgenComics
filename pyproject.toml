@@ -3,23 +3,16 @@ requires = ["setuptools", "beautifulsoup4", "pycomicvine", "requests"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name="libgen_api_comicvine"
-version="2.0.0"
-description="Search Library genesis by Title or Author"
-license = { text = "MIT" }
-classifiers=[
-    "Intended Audience :: Developers",
-    "Topic :: Software Development :: Libraries",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3"
+name = "libgen_api_comicvine"
+version = "2.0.0"
+description = "Search Library genesis by Title or Author"
+license = {text = "MIT"}
+classifiers = [
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3"
 ]
-
-[tool.ruff]
-target-version = "py312"
-line-length = 88
-
-lint.select = ["E", "F", "I", "U"]
-lint.ignore = [ "E501" ]
 
 [tool.mypy]
 python_version = "3.12"
@@ -32,3 +25,9 @@ no_implicit_optional = true
 [[tool.mypy.overrides]]
 module = "setuptools.*"
 ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+lint.select = ["E", "F", "I", "U"]
+lint.ignore = ["E501"]

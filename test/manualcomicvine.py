@@ -8,9 +8,9 @@ python3 test.py
 
 """
 
+import json
 
 from libgen_api_comicvine.libgen_search import LibgenSearch
-import json
 
 id = 32296
 

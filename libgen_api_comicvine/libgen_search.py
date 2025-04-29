@@ -1,8 +1,7 @@
-from .search_request import SearchRequest
-import requests
-from bs4 import BeautifulSoup
-
 import collections.abc
+
+from .search_request import SearchRequest
+
 collections.Iterable = collections.abc.Iterable
 import pycomicvine
 
@@ -54,8 +53,8 @@ class LibgenSearch:
         return self.search_title_filtered(
             volume.name,
             {"Year": str(volume.start_year), "Publisher": volume.publisher.name},
-            exact_match=True)
-
+            exact_match=True,
+        )
 
 
 def filter_results(results, filters, exact_match):
