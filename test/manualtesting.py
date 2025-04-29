@@ -140,9 +140,3 @@ print(
 
 titles = tfpe.search_title_filtered(title, exact_partial_filters, exact_match=True)
 print_results(titles)
-
-
-# test resolving of mirror links
-# should print a populated hash of source:download_link pairs
-arml = LibgenSearch()
-print("\n>>>\tSearching for title: " + title + " and resolving download links")
