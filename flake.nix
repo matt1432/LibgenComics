@@ -64,6 +64,8 @@
 
               postPatch = ''
                 substituteInPlace ./setup.py --replace-fail "**extra" ""
+                substituteInPlace ./pycomicvine/__init__.py \
+                    --replace-fail "collections.Iterable" "collections.abc.Iterable"
               '';
 
               dependencies = [simplejson python-dateutil];

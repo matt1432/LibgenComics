@@ -1,9 +1,6 @@
-import collections.abc
+import pycomicvine
 
 from .search_request import SearchRequest
-
-collections.Iterable = collections.abc.Iterable
-import pycomicvine
 
 MIRROR_SOURCES = ["GET", "Cloudflare", "IPFS.io", "Infura"]
 
