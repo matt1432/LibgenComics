@@ -68,23 +68,23 @@
             beautifulsoup4,
             pycomicvine,
             requests,
+            setuptools,
             ...
           }: let
             pname = "libgen-api-comicvine";
-            version = let
-              matchVersion = builtins.match ".*version=[\"']([^\"']+)[\"'].*";
-            in
-              builtins.head (matchVersion (builtins.readFile ./setup.py));
+            version = (builtins.fromTOML (builtins.readFile ./pyproject.toml)).project.version;
           in
             buildPythonPackage {
               inherit pname version;
-              format = "setuptools";
+              format = "pyproject";
               src = ./.;
+              build-system = [setuptools];
               dependencies = [
                 beautifulsoup4
                 pycomicvine
                 requests
               ];
+              pythonImportChecks = ["libgen_api_comicvine"];
             }) {};
         };
       };
@@ -102,12 +102,12 @@
       default = pkgs.mkShell {
         packages = with pkgs; [
           alejandra
+
           (python3Packages.python.withPackages (ps:
             with python3Packages; [
               beautifulsoup4
               libgen-api-comicvine
               pycomicvine
-              pytest
               requests
             ]))
         ];
