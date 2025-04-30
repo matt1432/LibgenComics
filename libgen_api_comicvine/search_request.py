@@ -16,7 +16,6 @@ from bs4 import BeautifulSoup
 
 
 # attempts to chain attributes, indexes or functions of the root object
-# returns an empty string if None
 def opt_chain(root, *keys):
     result = root
     for k in keys:
@@ -86,6 +85,27 @@ class SearchRequest:
                     book["Cover"] = (
                         f"https://covers.openlibrary.org/b/olid/{book_json['openlibraryid']}-M.jpg"
                     )
+
+        return output_data
+
+    def add_comicvine_url(self, output_data):
+        ids = ",".join([book["ID"] for book in output_data])
+
+        url = f"https://libgen.is/json.php?ids={ids}&fields=id&addkeys=309"
+
+        response = json.loads(requests.get(url).text)
+
+        for book in output_data:
+            for book_json in response:
+                if book["ID"] == book_json["id"]:
+                    if book["Series"]["ID"] != "":
+                        series_url = f"https://libgen.gs/json.php?object=s&ids={book["Series"]["ID"]}&fields=*&addkeys=309"
+                        series = list(json.loads(requests.get(series_url).text).values())[0]
+
+                        if "add" in series:
+                            for added_key in series["add"].values():
+                                if added_key["value"].startswith("https://comicvine.gamespot.com"):
+                                    book["Comicvine"] = added_key["value"]
 
         return output_data
 
@@ -204,4 +224,5 @@ class SearchRequest:
 
         output_data = self.add_direct_download_links(output_data)
         output_data = self.add_book_cover_links(output_data)
+        output_data = self.add_comicvine_url(output_data)
         return output_data

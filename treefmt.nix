@@ -1,7 +1,6 @@
 {...}: {
   projectRootFile = "flake.lock";
 
-  programs.mypy.enable = true;
   programs.ruff.format = true;
   programs.ruff.check = true;
 
