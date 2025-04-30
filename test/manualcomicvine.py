@@ -17,7 +17,8 @@ id = 32296
 
 # helper function to print first title if it exists.
 def print_results(titles_array):
-    print(json.dumps(titles_array[0], indent=1) if len(titles_array) else "No results.")
+    for title in titles_array:
+        print(json.dumps(title, indent=1))
     print("\n\n--- END OF OUTPUT ---\n\n")
 
 

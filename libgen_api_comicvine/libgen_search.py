@@ -45,11 +45,12 @@ class LibgenSearch:
     def search_comicvine_id(self, id, issue):
         volume = pycomicvine.Volume(id, all=True)
 
-        print(volume.site_detail_url)
-
         return self.search_title_filtered(
             volume.name,
-            {"Year": str(volume.start_year), "Publisher": volume.publisher.name},
+            {
+                "Publisher": volume.publisher.name,
+                "Comicvine": volume.site_detail_url,
+            },
             exact_match=True,
         )
 
