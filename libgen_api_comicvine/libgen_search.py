@@ -42,7 +42,7 @@ class LibgenSearch:
         )
         return filtered_results
 
-    def search_comicvine_id_filtered(self, id, issue_number, filters, exact_match=True):
+    def search_comicvine_id(self, id, issue_number):
         volume = pycomicvine.Volume(id, all=True)
         issue = volume.issues[issue_number - 1]
 
@@ -63,10 +63,14 @@ class LibgenSearch:
         for filtered_issue in filtered_issues:
             files.extend(series_request.aggregate_files_data(filtered_issue))
 
-        return filter_results(results=files, filters=filters, exact_match=exact_match)
+        return files
 
-    def search_comicvine_id(self, id, issue_number):
-        return self.search_comicvine_id_filtered(id, issue_number, {}, False)
+    def search_comicvine_id_filtered(self, id, issue_number, filters, exact_match=True):
+        return filter_results(
+            results=self.search_comicvine_id_filtered(id, issue_number),
+            filters=filters,
+            exact_match=exact_match,
+        )
 
 
 def filter_results(results, filters, exact_match):
