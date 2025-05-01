@@ -42,23 +42,25 @@ class LibgenSearch:
         )
         return filtered_results
 
-    def search_comicvine_id(self, id, issue):
+    def search_comicvine_id(self, id, issue_number):
         volume = pycomicvine.Volume(id, all=True)
+        issue = volume.issues[issue_number - 1]
 
-        search_series_request = SearchSeriesRequest(volume.name)
-        results = search_series_request.aggregate_request_data()
-        filtered_results = filter_results(
-            results=results,
+        issue_pages = SearchSeriesRequest(volume.name).aggregate_issues_data()
+        filtered_issues = filter_results(
+            results=issue_pages,
             filters={
                 "Comicvine": volume.site_detail_url,
+                "Number": str(issue_number),
                 "Publisher": volume.publisher.name,
+                "Year": str(issue.store_date.year),
             },
-            exact_match=True,
+            exact_match=False,
         )
 
-        # TODO: get list of issues on series webpage and then get files of wanted issue
+        # TODO: get files of wanted issue
 
-        return filtered_results
+        return filtered_issues
 
 
 def filter_results(results, filters, exact_match):

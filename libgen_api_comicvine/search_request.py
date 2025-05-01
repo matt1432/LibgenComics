@@ -68,7 +68,6 @@ class SearchRequest:
             book["Direct_Download_Link"] = (
                 f"https://download.books.ms/main/{download_id}/{md5}/{title}.{extension}"
             )
-
         return output_data
 
     def add_book_cover_links(self, output_data):
@@ -85,7 +84,6 @@ class SearchRequest:
                     book["Cover"] = (
                         f"https://covers.openlibrary.org/b/olid/{book_json['openlibraryid']}-M.jpg"
                     )
-
         return output_data
 
     def add_comicvine_url(self, output_data):
@@ -100,7 +98,6 @@ class SearchRequest:
                             "https://comicvine.gamespot.com"
                         ):
                             book["Comicvine"] = added_key["value"]
-
         return output_data
 
     def aggregate_request_data(self):
@@ -215,7 +212,6 @@ class SearchRequest:
                     "Mirrors": mirrors,
                 }
             )
-
         output_data = self.add_direct_download_links(output_data)
         output_data = self.add_book_cover_links(output_data)
         output_data = self.add_comicvine_url(output_data)
@@ -248,10 +244,9 @@ class SearchSeriesRequest:
                             "https://comicvine.gamespot.com"
                         ):
                             series["Comicvine"] = added_key["value"]
-
         return output_data
 
-    def aggregate_request_data(self):
+    def aggregate_series_data(self):
         soup = BeautifulSoup(self.get_search_page().text, "html.parser")
 
         # Table of data to scrape.
@@ -296,6 +291,113 @@ class SearchSeriesRequest:
                     ).strip(),
                 }
             )
-
         output_data = self.add_comicvine_url(output_data)
+        return output_data
+
+    def get_issues_page(self, id):
+        search_url = (
+            f"https://libgen.gs/series.php?id={id}&covers=0&sort=date&sortmode=asc"
+        )
+        return requests.get(search_url)
+
+    def aggregate_issues_data(self):
+        series_list = self.aggregate_series_data()
+
+        if len(series_list) == 0:
+            return []
+
+        series = series_list[0]
+
+        soup = BeautifulSoup(self.get_issues_page(series["ID"]).text, "html.parser")
+
+        # Table of data to scrape.
+        information_table = soup.find(id="tablelibgen").tbody
+
+        output_data = []
+
+        for row in information_table.find_all("tr"):
+            output_data.append(
+                {
+                    "ID": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        1,
+                        "a",
+                        "attrs",
+                        "href",
+                    )
+                    .replace("edition.php?id=", "")
+                    .strip(),
+                    "Year": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        1,
+                        "a",
+                        "string",
+                    ).strip(),
+                    "YearNumber": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        2,
+                        "a",
+                        "string",
+                    ).strip(),
+                    "Number": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        3,
+                        "a",
+                        "string",
+                    ).strip(),
+                    "Volume": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        4,
+                        "a",
+                        "string",
+                    ).strip(),
+                    "Issue": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        5,
+                        "a",
+                        "string",
+                    ).strip(),
+                    "Title": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        6,
+                        "a",
+                        "string",
+                    ).strip(),
+                    "Author(s)": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        7,
+                        lambda x: x.get_text(),
+                    )
+                    .replace("[...]", "")
+                    .strip(),
+                    "Publisher": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        8,
+                        "a",
+                        "string",
+                    ).strip(),
+                    "Pages": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        9,
+                        "string",
+                    ).strip(),
+                    "ISBN": opt_chain_str(
+                        row,
+                        lambda x: x.find_all("td"),
+                        10,
+                        "string",
+                    ).strip(),
+                    "Comicvine": series["Comicvine"],
+                }
+            )
         return output_data
