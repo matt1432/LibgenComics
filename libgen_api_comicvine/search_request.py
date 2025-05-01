@@ -1,4 +1,5 @@
 import json
+import re
 import urllib.parse
 from inspect import isfunction
 
@@ -398,6 +399,56 @@ class SearchSeriesRequest:
                         "string",
                     ).strip(),
                     "Comicvine": series["Comicvine"],
+                }
+            )
+        return output_data
+
+    def get_files_page(self, id):
+        search_url = f"https://libgen.gs/edition.php?id={id}"
+        return requests.get(search_url)
+
+    def aggregate_files_data(self, issue):
+        soup = BeautifulSoup(self.get_files_page(issue["ID"]).text, "html.parser")
+
+        # Table of data to scrape.
+        information_table = soup.find(id="tablelibgen")
+
+        output_data = []
+
+        for row in information_table.find_all("tr"):
+            cell_data = opt_chain_str(row, lambda x: x.find_all("td"), 1)
+
+            filename = opt_chain_str(cell_data, "font", "string")
+
+            links = {}
+            to_filter = []
+            for a_elem in opt_chain(cell_data, lambda x: x.find_all("a")) or []:
+                to_filter.append(opt_chain_str(a_elem.get_text()))
+
+                source = opt_chain(a_elem, "attrs", "title")
+
+                if source is not None:
+                    links[source] = (
+                        opt_chain_str(a_elem, "attrs", "href")
+                        if source != "torrent"
+                        else "https://libgen.gs"
+                        + opt_chain_str(a_elem, "attrs", "href")
+                    )
+
+            text_data = opt_chain_str(cell_data, lambda x: x.get_text()).replace(
+                "".join([" ".join(to_filter), "\n", filename]), ""
+            )
+
+            regex = r"([A-Za-z ]+?): ([^:]+?)(?=\s[A-Za-z ]+?:|$)"
+
+            output_data.append(
+                {
+                    "Filename": filename,
+                    **{
+                        match[0].strip(): match[1].strip()
+                        for match in re.findall(regex, text_data)
+                    },
+                    "Links": links,
                 }
             )
         return output_data

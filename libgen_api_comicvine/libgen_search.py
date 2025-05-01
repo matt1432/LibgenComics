@@ -46,7 +46,8 @@ class LibgenSearch:
         volume = pycomicvine.Volume(id, all=True)
         issue = volume.issues[issue_number - 1]
 
-        issue_pages = SearchSeriesRequest(volume.name).aggregate_issues_data()
+        series_request = SearchSeriesRequest(volume.name)
+        issue_pages = series_request.aggregate_issues_data()
         filtered_issues = filter_results(
             results=issue_pages,
             filters={
@@ -58,9 +59,13 @@ class LibgenSearch:
             exact_match=False,
         )
 
+        files = []
+        for filtered_issue in filtered_issues:
+            files.extend(series_request.aggregate_files_data(filtered_issue))
+
         # TODO: get files of wanted issue
 
-        return filtered_issues
+        return files
 
 
 def filter_results(results, filters, exact_match):
