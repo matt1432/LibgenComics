@@ -99,12 +99,16 @@ class SearchRequest:
             for book_json in response:
                 if book["ID"] == book_json["id"]:
                     if book["Series"]["ID"] != "":
-                        series_url = f"https://libgen.gs/json.php?object=s&ids={book["Series"]["ID"]}&fields=*&addkeys=309"
-                        series = list(json.loads(requests.get(series_url).text).values())[0]
+                        series_url = f"https://libgen.gs/json.php?object=s&ids={book['Series']['ID']}&fields=*&addkeys=309"
+                        series = list(
+                            json.loads(requests.get(series_url).text).values()
+                        )[0]
 
                         if "add" in series:
                             for added_key in series["add"].values():
-                                if added_key["value"].startswith("https://comicvine.gamespot.com"):
+                                if added_key["value"].startswith(
+                                    "https://comicvine.gamespot.com"
+                                ):
                                     book["Comicvine"] = added_key["value"]
 
         return output_data

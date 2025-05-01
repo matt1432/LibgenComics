@@ -49,7 +49,7 @@
             python-dateutil,
             ...
           }:
-            buildPythonPackage {
+            buildPythonPackage rec {
               pname = "pycomicvine";
               version = "1.0.0";
 
@@ -57,18 +57,17 @@
 
               src = fetchFromGitHub {
                 owner = "miri64";
-                repo = "pycomicvine";
+                repo = pname;
                 rev = "bfc72ceb585c7d63bd5c603a51e838f81ce2d348";
                 hash = "sha256-vfqfcR4qFK9exLv727ppEJLEpwwGMd/xnLuMF6mXeP4=";
               };
 
               postPatch = ''
                 substituteInPlace ./setup.py --replace-fail "**extra" ""
-                substituteInPlace ./pycomicvine/__init__.py \
-                    --replace-fail "collections.Iterable" "collections.abc.Iterable"
               '';
 
               dependencies = [simplejson python-dateutil];
+              pythonImportChecks = [pname];
             }) {};
 
           libgen-api-comicvine = pyFinal.callPackage ({
@@ -82,10 +81,11 @@
             ...
           }: let
             pname = "libgen-api-comicvine";
-            version = (builtins.fromTOML (builtins.readFile ./pyproject.toml)).project.version;
+            tag = (builtins.fromTOML (builtins.readFile ./pyproject.toml)).project.version;
           in
             buildPythonPackage {
-              inherit pname version;
+              inherit pname;
+              version = "${tag}+${self.shortRev or "dirty"}";
               format = "pyproject";
               src = ./.;
               build-system = [setuptools];
