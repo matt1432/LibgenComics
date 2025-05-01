@@ -89,27 +89,17 @@ class SearchRequest:
         return output_data
 
     def add_comicvine_url(self, output_data):
-        ids = ",".join([book["ID"] for book in output_data])
-
-        url = f"https://libgen.is/json.php?ids={ids}&fields=id&addkeys=309"
-
-        response = json.loads(requests.get(url).text)
-
         for book in output_data:
-            for book_json in response:
-                if book["ID"] == book_json["id"]:
-                    if book["Series"]["ID"] != "":
-                        series_url = f"https://libgen.gs/json.php?object=s&ids={book['Series']['ID']}&fields=*&addkeys=309"
-                        series = list(
-                            json.loads(requests.get(series_url).text).values()
-                        )[0]
+            if book["Series"]["ID"] != "":
+                series_url = f"https://libgen.gs/json.php?object=s&ids={book['Series']['ID']}&fields=*&addkeys=309"
+                series = list(json.loads(requests.get(series_url).text).values())[0]
 
-                        if "add" in series:
-                            for added_key in series["add"].values():
-                                if added_key["value"].startswith(
-                                    "https://comicvine.gamespot.com"
-                                ):
-                                    book["Comicvine"] = added_key["value"]
+                if "add" in series:
+                    for added_key in series["add"].values():
+                        if added_key["value"].startswith(
+                            "https://comicvine.gamespot.com"
+                        ):
+                            book["Comicvine"] = added_key["value"]
 
         return output_data
 
@@ -207,7 +197,7 @@ class SearchRequest:
                         row, lambda x: x.find_all("td"), 1, "string"
                     ).strip(),
                     "Publisher": opt_chain_str(
-                        row.find_all("td"), 2, "a", "string"
+                        row, lambda x: x.find_all("td"), 2, "a", "string"
                     ).strip(),
                     "Year": opt_chain_str(
                         row, lambda x: x.find_all("td"), 3, "nobr", "string"
@@ -228,5 +218,84 @@ class SearchRequest:
 
         output_data = self.add_direct_download_links(output_data)
         output_data = self.add_book_cover_links(output_data)
+        output_data = self.add_comicvine_url(output_data)
+        return output_data
+
+
+class SearchSeriesRequest:
+    def __init__(self, query):
+        self.query = query
+
+        if len(self.query) < 3:
+            raise Exception("Query is too short")
+
+    def get_search_page(self):
+        query_parsed = "%20".join(self.query.split(" "))
+        search_url = f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=100"
+        return requests.get(search_url)
+
+    def add_comicvine_url(self, output_data):
+        for series in output_data:
+            if series["ID"] != "":
+                series_url = f"https://libgen.gs/json.php?object=s&ids={series['ID']}&fields=*&addkeys=309"
+                series_results = list(
+                    json.loads(requests.get(series_url).text).values()
+                )[0]
+
+                if "add" in series_results:
+                    for added_key in series_results["add"].values():
+                        if added_key["value"].startswith(
+                            "https://comicvine.gamespot.com"
+                        ):
+                            series["Comicvine"] = added_key["value"]
+
+        return output_data
+
+    def aggregate_request_data(self):
+        soup = BeautifulSoup(self.get_search_page().text, "html.parser")
+
+        # Table of data to scrape.
+        information_table = soup.find(id="tablelibgen").tbody
+
+        output_data = []
+
+        for row in information_table.find_all("tr"):
+            first_cell_data = opt_chain(
+                row, lambda x: x.find_all("td"), 0, lambda x: x.find_all("a"), 0
+            )
+
+            add_edit = (
+                opt_chain_str(
+                    first_cell_data, "attrs", "title", lambda x: x.split("<br>"), 0
+                )
+                .replace("Time added/Time modified : ", "")
+                .split("/")
+            )
+
+            published_period = (
+                opt_chain_str(row, lambda x: x.find_all("td"), 1, "nobr", "string")
+                .strip()
+                .split("―")
+            )
+
+            output_data.append(
+                {
+                    "Title": opt_chain_str(first_cell_data, "string").strip(),
+                    "ID": opt_chain_str(first_cell_data, "attrs", "href")
+                    .replace("series.php?id=", "")
+                    .strip(),
+                    "Add": opt_chain_str(add_edit, 0).strip(),
+                    "Edit": opt_chain_str(add_edit, 1).strip(),
+                    "Started": opt_chain_str(published_period, 0),
+                    "Ended": opt_chain_str(published_period, 1),
+                    "Publisher": opt_chain_str(
+                        row, lambda x: x.find_all("td"), 2, "a", "string"
+                    ).strip(),
+                    "Language": opt_chain_str(
+                        row, lambda x: x.find_all("td"), 3, "string"
+                    ).strip(),
+                }
+            )
+
         output_data = self.add_comicvine_url(output_data)
         return output_data

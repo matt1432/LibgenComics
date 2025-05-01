@@ -1,6 +1,6 @@
 import pycomicvine
 
-from .search_request import SearchRequest
+from .search_request import SearchRequest, SearchSeriesRequest
 
 MIRROR_SOURCES = ["GET", "Cloudflare", "IPFS.io", "Infura"]
 
@@ -45,14 +45,20 @@ class LibgenSearch:
     def search_comicvine_id(self, id, issue):
         volume = pycomicvine.Volume(id, all=True)
 
-        return self.search_title_filtered(
-            volume.name,
-            {
-                "Publisher": volume.publisher.name,
+        search_series_request = SearchSeriesRequest(volume.name)
+        results = search_series_request.aggregate_request_data()
+        filtered_results = filter_results(
+            results=results,
+            filters={
                 "Comicvine": volume.site_detail_url,
+                "Publisher": volume.publisher.name,
             },
             exact_match=True,
         )
+
+        # TODO: get list of issues on series webpage and then get files of wanted issue
+
+        return filtered_results
 
 
 def filter_results(results, filters, exact_match):
