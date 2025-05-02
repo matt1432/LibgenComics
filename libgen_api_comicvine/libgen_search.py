@@ -1,75 +1,6 @@
 import pycomicvine
 
-from .search_request import SearchRequest, SearchSeriesRequest
-
-MIRROR_SOURCES = ["GET", "Cloudflare", "IPFS.io", "Infura"]
-
-
-class LibgenSearch:
-    def search_default(self, query):
-        search_request = SearchRequest(query, search_type="default")
-        return search_request.aggregate_request_data()
-
-    def search_default_filtered(self, query, filters, exact_match=False):
-        search_request = SearchRequest(query, search_type="default")
-        results = search_request.aggregate_request_data()
-        filtered_results = filter_results(
-            results=results, filters=filters, exact_match=exact_match
-        )
-        return filtered_results
-
-    def search_title(self, query):
-        search_request = SearchRequest(query, search_type="title")
-        return search_request.aggregate_request_data()
-
-    def search_author(self, query):
-        search_request = SearchRequest(query, search_type="author")
-        return search_request.aggregate_request_data()
-
-    def search_title_filtered(self, query, filters, exact_match=True):
-        search_request = SearchRequest(query, search_type="title")
-        results = search_request.aggregate_request_data()
-        filtered_results = filter_results(
-            results=results, filters=filters, exact_match=exact_match
-        )
-        return filtered_results
-
-    def search_author_filtered(self, query, filters, exact_match=True):
-        search_request = SearchRequest(query, search_type="author")
-        results = search_request.aggregate_request_data()
-        filtered_results = filter_results(
-            results=results, filters=filters, exact_match=exact_match
-        )
-        return filtered_results
-
-    def search_comicvine_id(self, id, issue_number):
-        volume = pycomicvine.Volume(id, all=True)
-        issue = volume.issues[issue_number - 1]
-
-        series_request = SearchSeriesRequest(volume.name, volume.site_detail_url)
-        issue_pages = series_request.aggregate_issues_data()
-
-        filtered_issues = []
-
-        for issue in issue_pages:
-            if issue["Number"] == str(issue_number):
-                if issue["Pages"] == "" or int(issue["Pages"]) > 2:
-                    filtered_issues.append(issue)
-
-        files = []
-        for filtered_issue in filtered_issues:
-            for file in series_request.aggregate_files_data(filtered_issue):
-                if file["Pages"] == "" or int(file["Pages"]) > 2:
-                    files.append(file)
-
-        return files
-
-    def search_comicvine_id_filtered(self, id, issue_number, filters, exact_match=True):
-        return filter_results(
-            results=self.search_comicvine_id_filtered(id, issue_number),
-            filters=filters,
-            exact_match=exact_match,
-        )
+from .search_request import SearchRequest
 
 
 def filter_results(results, filters, exact_match):
@@ -104,3 +35,34 @@ def filter_results(results, filters, exact_match):
             if filter_matches_result:
                 filtered_list.append(result)
     return filtered_list
+
+
+class LibgenSearch:
+    def search_comicvine_id(self, id, issue_number):
+        volume = pycomicvine.Volume(id, all=True)
+        issue = volume.issues[issue_number - 1]
+
+        series_request = SearchRequest(volume.name, volume.site_detail_url)
+        issue_pages = series_request.aggregate_issues_data()
+
+        filtered_issues = []
+
+        for issue in issue_pages:
+            if issue["Number"] == str(issue_number):
+                if issue["Pages"] == "" or int(issue["Pages"]) > 2:
+                    filtered_issues.append(issue)
+
+        files = []
+        for filtered_issue in filtered_issues:
+            for file in series_request.aggregate_files_data(filtered_issue):
+                if file["Pages"] == "" or int(file["Pages"]) > 2:
+                    files.append(file)
+
+        return files
+
+    def search_comicvine_id_filtered(self, id, issue_number, filters, exact_match=True):
+        return filter_results(
+            results=self.search_comicvine_id_filtered(id, issue_number),
+            filters=filters,
+            exact_match=exact_match,
+        )
