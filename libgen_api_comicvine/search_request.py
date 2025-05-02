@@ -198,7 +198,13 @@ class SearchRequest:
                         row, lambda x: x.find_all("td"), 1, "string"
                     ).strip(),
                     "Publisher": opt_chain_str(
-                        row, lambda x: x.find_all("td"), 2, "a", "string"
+                        row,
+                        lambda x: x.find_all("td"),
+                        2,
+                        lambda x: ";".join(
+                            map(lambda x: opt_chain_str(x, "string"), x.find_all("a"))
+                        ),
+                        "string",
                     ).strip(),
                     "Year": opt_chain_str(
                         row, lambda x: x.find_all("td"), 3, "nobr", "string"
@@ -289,7 +295,13 @@ class SearchSeriesRequest:
                     "Started": opt_chain_str(published_period, 0),
                     "Ended": opt_chain_str(published_period, 1),
                     "Publisher": opt_chain_str(
-                        row, lambda x: x.find_all("td"), 2, "a", "string"
+                        row,
+                        lambda x: x.find_all("td"),
+                        2,
+                        lambda x: ";".join(
+                            map(lambda x: opt_chain_str(x, "string"), x.find_all("a"))
+                        ),
+                        "string",
                     ).strip(),
                     "Language": opt_chain_str(
                         row, lambda x: x.find_all("td"), 3, "string"
@@ -390,7 +402,9 @@ class SearchSeriesRequest:
                         row,
                         lambda x: x.find_all("td"),
                         8,
-                        "a",
+                        lambda x: ";".join(
+                            map(lambda x: opt_chain_str(x, "string"), x.find_all("a"))
+                        ),
                         "string",
                     ).strip(),
                     "Pages": opt_chain_str(
