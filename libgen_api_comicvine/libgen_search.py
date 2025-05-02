@@ -37,6 +37,7 @@ def filter_results(results, filters, exact_match):
     return filtered_list
 
 
+# TODO: add search from comicvine ID and supplied libgen.gs series url
 class LibgenSearch:
     def search_comicvine_id(self, id, issue_number):
         volume = pycomicvine.Volume(id, all=True)
@@ -55,7 +56,9 @@ class LibgenSearch:
         files = []
         for filtered_issue in filtered_issues:
             for file in series_request.aggregate_files_data(filtered_issue):
-                if file["Pages"] == "" or int(file["Pages"]) > 2:
+                if file["Links"] != {} and (
+                    file["Pages"] == "" or int(file["Pages"]) > 2
+                ):
                     files.append(file)
 
         return files

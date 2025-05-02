@@ -12,7 +12,7 @@ import json
 
 from libgen_api_comicvine.libgen_search import LibgenSearch
 
-id = 33227
+id = 7258
 
 
 # helper function to print first title if it exists.
