@@ -27,5 +27,9 @@ def print_results(titles_array):
 t = LibgenSearch()
 print("\n>>>\tSearching for Comicvine ID: " + str(id))
 
-titles = t.search_comicvine_id(id, 1)
-print_results(titles)
+try:
+    titles = t.search_comicvine_id(id, 25)
+    print_results(titles)
+except KeyboardInterrupt:
+    print("\nExiting program...")
+    exit(0)
