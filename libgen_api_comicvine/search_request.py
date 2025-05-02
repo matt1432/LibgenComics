@@ -230,15 +230,22 @@ class SearchRequest:
 
 
 class SearchSeriesRequest:
-    def __init__(self, query):
+    def __init__(self, query, comicvine_url):
         self.query = query
+        self.comicvine_url = comicvine_url
 
         if len(self.query) < 3:
             raise Exception("Query is too short")
 
-    def get_search_page(self):
+    def get_search_page(self, page=None):
         query_parsed = "%20".join(self.query.split(" "))
-        search_url = f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=100"
+        if page is None:
+            search_url = (
+                f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=100"
+            )
+        else:
+            search_url = f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=100&page={page}"
+        print(search_url)
         return requests.get(search_url)
 
     def add_comicvine_url(self, output_data):
@@ -257,7 +264,7 @@ class SearchSeriesRequest:
                             series["Comicvine"] = added_key["value"]
         return output_data
 
-    def aggregate_series_data(self):
+    def aggregate_series_data(self, soup):
         if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
             raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
 
@@ -313,19 +320,39 @@ class SearchSeriesRequest:
         output_data = self.add_comicvine_url(output_data)
         return output_data
 
+    def get_series(self):
+        soup = BeautifulSoup(self.get_search_page().text, "html.parser")
+
+        if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
+            raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
+
+        if soup.find(id="paginator_example_top") is not None:
+            page = 1
+
+            while soup.tbody is not None:
+                for series in self.aggregate_series_data(soup):
+                    if series["Comicvine"] == self.comicvine_url:
+                        return series
+
+                page += 1
+                soup = BeautifulSoup(self.get_search_page(page).text, "html.parser")
+        else:
+            for series in self.aggregate_series_data(soup):
+                if series["Comicvine"] == self.comicvine_url:
+                    return series
+
+        return None
+
     def get_issues_page(self, id):
-        search_url = (
-            f"https://libgen.gs/series.php?id={id}&covers=0&sort=date&sortmode=asc"
-        )
+        search_url = f"https://libgen.gs/series.php?id={id}&covers=0&sort=date&sortmode=asc&viewmode=list"
+        print(search_url)
         return requests.get(search_url)
 
     def aggregate_issues_data(self):
-        series_list = self.aggregate_series_data()
+        series = self.get_series()
 
-        if len(series_list) == 0:
+        if series is None:
             return []
-
-        series = series_list[0]
 
         soup = BeautifulSoup(self.get_issues_page(series["ID"]).text, "html.parser")
 
@@ -470,6 +497,7 @@ class SearchSeriesRequest:
             output_data.append(
                 {
                     "Filename": filename,
+                    "Pages": "",
                     **{
                         match[0].strip(): match[1].strip()
                         for match in re.findall(regex, text_data)
