@@ -220,6 +220,7 @@ class SearchRequest:
                     ).strip(),
                     "Extension": extension,
                     "Mirrors": mirrors,
+                    "Comicvine": "",
                 }
             )
         output_data = self.add_direct_download_links(output_data)
@@ -306,6 +307,7 @@ class SearchSeriesRequest:
                     "Language": opt_chain_str(
                         row, lambda x: x.find_all("td"), 3, "string"
                     ).strip(),
+                    "Comicvine": "",
                 }
             )
         output_data = self.add_comicvine_url(output_data)
@@ -473,6 +475,7 @@ class SearchSeriesRequest:
                         for match in re.findall(regex, text_data)
                     },
                     "Links": links,
+                    "Comicvine": issue["Comicvine"],
                 }
             )
         return output_data
