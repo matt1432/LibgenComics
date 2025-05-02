@@ -104,6 +104,9 @@ class SearchRequest:
     def aggregate_request_data(self):
         soup = BeautifulSoup(self.get_search_page().text, "html.parser")
 
+        if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
+            raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
+
         # Table of data to scrape.
         information_table = soup.find(id="tablelibgen").tbody
 
@@ -248,7 +251,8 @@ class SearchSeriesRequest:
         return output_data
 
     def aggregate_series_data(self):
-        soup = BeautifulSoup(self.get_search_page().text, "html.parser")
+        if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
+            raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
 
         # Table of data to scrape.
         information_table = soup.find(id="tablelibgen").tbody
@@ -310,6 +314,9 @@ class SearchSeriesRequest:
         series = series_list[0]
 
         soup = BeautifulSoup(self.get_issues_page(series["ID"]).text, "html.parser")
+
+        if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
+            raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
 
         # Table of data to scrape.
         information_table = soup.find(id="tablelibgen").tbody
@@ -409,6 +416,9 @@ class SearchSeriesRequest:
 
     def aggregate_files_data(self, issue):
         soup = BeautifulSoup(self.get_files_page(issue["ID"]).text, "html.parser")
+
+        if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
+            raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
 
         # Table of data to scrape.
         information_table = soup.find(id="tablelibgen")
