@@ -10,7 +10,7 @@ python3 test.py
 
 import json
 
-from libgen_api_comicvine.libgen_search import LibgenSearch
+from libgencv import LibgenSearch
 
 with open(".api") as file:
     import pycomicvine

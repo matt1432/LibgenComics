@@ -3,9 +3,9 @@ requires = ["setuptools", "beautifulsoup4", "pycomicvine", "requests"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "libgen_api_comicvine"
+name = "libgen-api-comicvine"
 version = "0.0.1a1"
-description = "Search Library genesis by Title or Author"
+description = "Search Library genesis by Comicvine volume ID"
 license = "MIT"
 classifiers = [
   "Intended Audience :: Developers",

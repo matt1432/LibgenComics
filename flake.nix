@@ -70,7 +70,7 @@
               pythonImportChecks = [pname];
             }) {};
 
-          libgen-api-comicvine = pyFinal.callPackage ({
+          libgencv = pyFinal.callPackage ({
             # nix build inputs
             buildPythonPackage,
             # python deps
@@ -80,7 +80,7 @@
             setuptools,
             ...
           }: let
-            pname = "libgen-api-comicvine";
+            pname = "libgencv";
             tag = (builtins.fromTOML (builtins.readFile ./pyproject.toml)).project.version;
           in
             buildPythonPackage {
@@ -94,7 +94,7 @@
                 pycomicvine
                 requests
               ];
-              pythonImportChecks = ["libgen_api_comicvine"];
+              pythonImportChecks = ["libgencv"];
             }) {};
         };
       };
@@ -119,7 +119,7 @@
           (python3Packages.python.withPackages (_ps:
             with python3Packages; [
               beautifulsoup4
-              libgen-api-comicvine
+              libgencv
               pycomicvine
               requests
             ]))
