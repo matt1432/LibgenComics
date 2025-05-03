@@ -40,22 +40,21 @@ def filter_results(results, filters, exact_match):
 # TODO: add search from comicvine ID and supplied libgen.gs series url
 class LibgenSearch:
     def search_comicvine_id(self, id, issue_number):
-        volume = pycomicvine.Volume(id, all=True)
-        issue = volume.issues[issue_number - 1]
+        cv_volume = pycomicvine.Volume(id, all=True)
 
-        series_request = SearchRequest(volume.name, volume.site_detail_url)
-        issue_pages = series_request.aggregate_issues_data()
+        series_request = SearchRequest(cv_volume.name, cv_volume.site_detail_url)
+        editions = series_request.fetch_editions_data()
 
-        filtered_issues = []
+        filtered_editions = []
 
-        for issue in issue_pages:
-            if issue["Number"] == str(issue_number):
-                if issue["Pages"] == "" or int(issue["Pages"]) > 2:
-                    filtered_issues.append(issue)
+        for edition in editions:
+            if edition["Number"] == str(issue_number):
+                if edition["Pages"] == "" or int(edition["Pages"]) > 2:
+                    filtered_editions.append(edition)
 
         files = []
-        for filtered_issue in filtered_issues:
-            for file in series_request.aggregate_files_data(filtered_issue):
+        for filtered_ed in filtered_editions:
+            for file in series_request.fetch_files_data(filtered_ed):
                 files.append(file)
 
         return files

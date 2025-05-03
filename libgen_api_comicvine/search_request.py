@@ -1,5 +1,4 @@
 import json
-import re
 from inspect import isfunction
 
 import requests
@@ -153,138 +152,64 @@ class SearchRequest:
 
         return None
 
-    def get_issues_page(self, id):
-        search_url = f"https://libgen.gs/series.php?id={id}&covers=0&sort=date&sortmode=asc&viewmode=list"
-        print(search_url)
-        return requests.get(search_url)
-
-    def aggregate_issues_data(self):
+    def fetch_editions_data(self):
         series = self.get_series()
 
         if series is None:
             return []
 
-        soup = BeautifulSoup(self.get_issues_page(series["ID"]).text, "html.parser")
-
-        if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
-            raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
-
-        # Table of data to scrape.
-        information_table = soup.find(id="tablelibgen").tbody
+        series_url = (
+            f"https://libgen.gs/json.php?object=s&fields=editions&ids={series['ID']}"
+        )
+        edition_ids = list(
+            list(json.loads(requests.get(series_url).text).values())[0][
+                "editions"
+            ].keys()
+        )
 
         output_data = []
 
-        for row in information_table.find_all("tr"):
+        for ed_id in edition_ids:
+            ed_url = f"https://libgen.gs/json.php?object=e&ids={ed_id}"
+            edition = list(json.loads(requests.get(ed_url).text).values())[0]
+
             output_data.append(
                 {
-                    "ID": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        1,
-                        "a",
-                        "attrs",
-                        "href",
-                    )
-                    .replace("edition.php?id=", "")
-                    .strip(),
-                    "Year": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        1,
-                        "a",
-                        "string",
-                    ).strip(),
-                    "YearNumber": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        2,
-                        "a",
-                        "string",
-                    ).strip(),
-                    "Number": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        3,
-                        "a",
-                        "string",
-                    ).strip(),
-                    "Volume": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        4,
-                        "a",
-                        "string",
-                    ).strip(),
-                    "Issue": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        5,
-                        "a",
-                        "string",
-                    ).strip(),
-                    "Title": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        6,
-                        "a",
-                        "string",
-                    ).strip(),
-                    "Author(s)": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        7,
-                        lambda x: x.get_text(),
-                    )
-                    .replace("[...]", "")
-                    .strip(),
-                    "Publisher": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        8,
-                        lambda x: ";".join(
-                            map(lambda x: opt_chain_str(x, "string"), x.find_all("a"))
-                        ),
-                        "string",
-                    ).strip(),
-                    "Pages": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        9,
-                        "string",
-                    ).strip(),
-                    "ISBN": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        10,
-                        "string",
-                    ).strip(),
+                    "Number": edition["issue_total_number"],
+                    "ID": ed_id,
                     "Comicvine": series["Comicvine"],
+                    "Title": edition["title"],
+                    "Author": edition["author"],
+                    "Publisher": edition["publisher"],
+                    "Year": edition["year"],
+                    "Month": edition["month"],
+                    "Day": edition["day"],
+                    "Pages": edition["pages"],
+                    "Cover": edition["cover_url"],
+                    "Added": edition["time_added"],
+                    "Edited": edition["time_last_modified"],
                 }
             )
         return output_data
 
-    def get_file_page(self, id):
-        search_url = f"https://libgen.gs/file.php?id={id}"
-        return requests.get(search_url)
-
-    def aggregate_files_data(self, issue):
-        files_url = f"https://libgen.gs/json.php?object=e&fields=files&ids={issue["ID"]}"
-        files_results = list(list(
-            json.loads(requests.get(files_url).text).values()
-        )[0]["files"].values())
+    def fetch_files_data(self, issue):
+        files_url = (
+            f"https://libgen.gs/json.php?object=e&fields=files&ids={issue['ID']}"
+        )
+        files_results = list(
+            list(json.loads(requests.get(files_url).text).values())[0]["files"].values()
+        )
 
         output_data = []
 
         for file_result in files_results:
-            file_url = f"https://libgen.gs/json.php?object=f&ids={file_result["f_id"]}"
-            file = list(
-                json.loads(requests.get(file_url).text).values()
-            )[0]
+            file_url = f"https://libgen.gs/json.php?object=f&ids={file_result['f_id']}"
+            file = list(json.loads(requests.get(file_url).text).values())[0]
 
             if file["broken"] == "N":
                 output_data.append(
                     {
-                        "Download": f"https://libgen.gl/get.php?md5={file["md5"]}",
+                        "Download": f"https://libgen.gl/get.php?md5={file['md5']}",
                         "Filename": file["locator"].split("\\")[-1],
                         "Pages": file["archive_files_pic_count"],
                         "Comicvine": issue["Comicvine"],
