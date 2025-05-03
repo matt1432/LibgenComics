@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "libgen_api_comicvine"
-version = "2.0.0"
+version = "0.0.1a1"
 description = "Search Library genesis by Title or Author"
 license = "MIT"
 classifiers = [
