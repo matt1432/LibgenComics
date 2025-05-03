@@ -1,9 +1,11 @@
-import pycomicvine
+from pycomicvine import Volume
 
 from .search_request import SearchRequest
 
 
-def filter_results(results, filters, exact_match):
+def filter_results(
+    results: list[dict[str, str]], filters: dict[str, str], exact_match: bool = True
+) -> list[dict[str, str]]:
     """
     Returns a list of results that match the given filter criteria.
     When exact_match = true, we only include results that exactly match
@@ -39,10 +41,12 @@ def filter_results(results, filters, exact_match):
 
 # TODO: add search from comicvine ID and supplied libgen.gs series url
 class LibgenSearch:
-    def search_comicvine_id(self, id, issue_number):
-        cv_volume = pycomicvine.Volume(id, all=True)
+    def search_comicvine_id(self, id: int, issue_number: int) -> list[dict[str, str]]:
+        cv_volume: Volume = Volume(id, all=True)  # type: ignore
 
-        series_request = SearchRequest(cv_volume.name, cv_volume.site_detail_url)
+        series_request = SearchRequest(
+            str(cv_volume.name), str(cv_volume.site_detail_url)
+        )
         editions = series_request.fetch_editions_data()
 
         filtered_editions = []
@@ -59,9 +63,15 @@ class LibgenSearch:
 
         return files
 
-    def search_comicvine_id_filtered(self, id, issue_number, filters, exact_match=True):
+    def search_comicvine_id_filtered(
+        self,
+        id: int,
+        issue_number: int,
+        filters: dict[str, str],
+        exact_match: bool = True,
+    ) -> list[dict[str, str]]:
         return filter_results(
-            results=self.search_comicvine_id_filtered(id, issue_number),
+            results=self.search_comicvine_id(id, issue_number),
             filters=filters,
             exact_match=exact_match,
         )

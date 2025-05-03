@@ -1,5 +1,7 @@
 import json
+from collections.abc import Callable
 from inspect import isfunction
+from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,12 +17,12 @@ from bs4 import BeautifulSoup
 
 
 # attempts to chain attributes, indexes or functions of the root object
-def opt_chain(root, *keys):
+def opt_chain(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | None:
     result = root
     for k in keys:
         if isinstance(result, dict):
             result = result.get(k, None)
-        elif isinstance(result, list):
+        elif isinstance(result, list) and isinstance(k, int):
             if k < len(result):
                 result = result[k]
             else:
@@ -28,25 +30,25 @@ def opt_chain(root, *keys):
         elif isfunction(k):
             result = k(result)
         else:
-            result = getattr(result, k, None)
+            result = getattr(result, str(k), None)
         if result is None:
             break
     return result
 
 
-def opt_chain_str(root, *keys):
+def opt_chain_str(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | str:
     return opt_chain(root, *keys) or ""
 
 
 class SearchRequest:
-    def __init__(self, query, comicvine_url):
+    def __init__(self, query: str, comicvine_url: str) -> None:
         self.query = query
         self.comicvine_url = comicvine_url
 
         if len(self.query) < 3:
             raise Exception("Query is too short")
 
-    def get_search_page(self, page=None):
+    def get_search_page(self, page: int | None = None) -> requests.Response:
         query_parsed = "%20".join(self.query.split(" "))
         if page is None:
             search_url = (
@@ -54,10 +56,11 @@ class SearchRequest:
             )
         else:
             search_url = f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=100&page={page}"
-        print(search_url)
         return requests.get(search_url)
 
-    def add_comicvine_url(self, output_data):
+    def add_comicvine_url(
+        self, output_data: list[dict[str, str]]
+    ) -> list[dict[str, str]]:
         for series in output_data:
             if series["ID"] != "":
                 series_url = f"https://libgen.gs/json.php?object=s&ids={series['ID']}&fields=*&addkeys=309"
@@ -73,12 +76,15 @@ class SearchRequest:
                             series["Comicvine"] = added_key["value"]
         return output_data
 
-    def aggregate_series_data(self, soup):
+    def aggregate_series_data(self, soup: BeautifulSoup) -> list[dict[str, str]]:
         if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
             raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
 
         # Table of data to scrape.
-        information_table = soup.find(id="tablelibgen").tbody
+        information_table = opt_chain(soup.find(id="tablelibgen"), "tbody")
+
+        if information_table is None:
+            return []
 
         output_data = []
 
@@ -129,7 +135,7 @@ class SearchRequest:
         output_data = self.add_comicvine_url(output_data)
         return output_data
 
-    def get_series(self):
+    def get_series(self) -> dict[str, str] | None:
         soup = BeautifulSoup(self.get_search_page().text, "html.parser")
 
         if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
@@ -138,7 +144,7 @@ class SearchRequest:
         if soup.find(id="paginator_example_top") is not None:
             page = 1
 
-            while soup.tbody is not None:
+            while soup.find("tbody") is not None:
                 for series in self.aggregate_series_data(soup):
                     if series["Comicvine"] == self.comicvine_url:
                         return series
@@ -152,7 +158,7 @@ class SearchRequest:
 
         return None
 
-    def fetch_editions_data(self):
+    def fetch_editions_data(self) -> list[dict[str, str]]:
         series = self.get_series()
 
         if series is None:
@@ -192,7 +198,7 @@ class SearchRequest:
             )
         return output_data
 
-    def fetch_files_data(self, issue):
+    def fetch_files_data(self, issue: dict[str, str]) -> list[dict[str, str]]:
         files_url = (
             f"https://libgen.gs/json.php?object=e&fields=files&ids={issue['ID']}"
         )
