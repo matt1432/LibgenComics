@@ -56,10 +56,7 @@ class LibgenSearch:
         files = []
         for filtered_issue in filtered_issues:
             for file in series_request.aggregate_files_data(filtered_issue):
-                if file["Links"] != {} and (
-                    file["Pages"] == "" or int(file["Pages"]) > 2
-                ):
-                    files.append(file)
+                files.append(file)
 
         return files
 

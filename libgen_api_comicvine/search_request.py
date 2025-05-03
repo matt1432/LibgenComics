@@ -263,57 +263,40 @@ class SearchRequest:
             )
         return output_data
 
-    def get_files_page(self, id):
-        search_url = f"https://libgen.gs/edition.php?id={id}"
+    def get_file_page(self, id):
+        search_url = f"https://libgen.gs/file.php?id={id}"
         return requests.get(search_url)
 
     def aggregate_files_data(self, issue):
-        soup = BeautifulSoup(self.get_files_page(issue["ID"]).text, "html.parser")
-
-        if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
-            raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
-
-        # Table of data to scrape.
-        information_table = soup.find(id="tablelibgen")
+        files_url = f"https://libgen.gs/json.php?object=e&fields=files&ids={issue["ID"]}"
+        files_results = list(list(
+            json.loads(requests.get(files_url).text).values()
+        )[0]["files"].values())
 
         output_data = []
 
-        for row in information_table.find_all("tr"):
-            cell_data = opt_chain_str(row, lambda x: x.find_all("td"), 1)
+        for file_result in files_results:
+            file_url = f"https://libgen.gs/json.php?object=f&ids={file_result["f_id"]}"
+            file = list(
+                json.loads(requests.get(file_url).text).values()
+            )[0]
 
-            filename = opt_chain_str(cell_data, "font", "string")
-
-            links = {}
-            to_filter = []
-            for a_elem in opt_chain(cell_data, lambda x: x.find_all("a")) or []:
-                to_filter.append(opt_chain_str(a_elem.get_text()))
-
-                source = opt_chain(a_elem, "attrs", "title")
-
-                if source is not None:
-                    links[source] = (
-                        opt_chain_str(a_elem, "attrs", "href")
-                        if source != "torrent"
-                        else "https://libgen.gs"
-                        + opt_chain_str(a_elem, "attrs", "href")
-                    )
-
-            text_data = opt_chain_str(cell_data, lambda x: x.get_text()).replace(
-                "".join([" ".join(to_filter), "\n", filename]), ""
-            )
-
-            regex = r"([A-Za-z ]+?): ([^:]+?)(?=\s[A-Za-z ]+?:|$)"
-
-            output_data.append(
-                {
-                    "Filename": filename,
-                    "Pages": "",
-                    **{
-                        match[0].strip(): match[1].strip()
-                        for match in re.findall(regex, text_data)
-                    },
-                    "Links": links,
-                    "Comicvine": issue["Comicvine"],
-                }
-            )
+            if file["broken"] == "N":
+                output_data.append(
+                    {
+                        "Download": f"https://libgen.gl/get.php?md5={file["md5"]}",
+                        "Filename": file["locator"].split("\\")[-1],
+                        "Pages": file["archive_files_pic_count"],
+                        "Comicvine": issue["Comicvine"],
+                        "DPI": file["dpi"],
+                        "Added": file["time_added"],
+                        "Edited": file["time_last_modified"],
+                        "Size": file["filesize"],
+                        "Extension": file["extension"],
+                        "Created": file["file_create_date"],
+                        "Type": file["scan_type"],
+                        "Releaser": file["releaser"],
+                        "Resolution": file["scan_size"],
+                    }
+                )
         return output_data
