@@ -12,6 +12,11 @@ import json
 
 from libgen_api_comicvine.libgen_search import LibgenSearch
 
+with open(".api") as file:
+    import pycomicvine
+
+    pycomicvine.api_key = file.read().replace("\n", "")
+
 id = 7258
 
 
