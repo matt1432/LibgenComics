@@ -27,16 +27,3 @@ class LibgenSearch:
                 files.append(file)
 
         return files
-
-    def search_comicvine_id_filtered(
-        self,
-        id: int,
-        issue_number: int,
-        filters: dict[str, str],
-        exact_match: bool = True,
-    ) -> list[dict[str, str]]:
-        return filter_results(
-            results=self.search_comicvine_id(id, issue_number),
-            filters=filters,
-            exact_match=exact_match,
-        )
