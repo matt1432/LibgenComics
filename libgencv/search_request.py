@@ -45,10 +45,6 @@ def opt_chain(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | None:
     return result
 
 
-def opt_chain_str(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | str:
-    return opt_chain(root, *keys) or ""
-
-
 class SearchRequest:
     def __init__(self, query: str, comicvine_url: str) -> None:
         self.query = query
@@ -68,8 +64,8 @@ class SearchRequest:
         return attempt_request(search_url)
 
     def aggregate_series_data(self, soup: BeautifulSoup) -> dict[str, str] | None:
-        if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
-            raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
+        if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
+            raise Exception(opt_chain(soup.find_all("center"), 0, "string"))
 
         # Table of data to scrape.
         information_table = opt_chain(soup.find(id="tablelibgen"), "tbody")
@@ -78,11 +74,13 @@ class SearchRequest:
             return None
 
         for row in information_table.find_all("tr"):
-            first_cell_data = opt_chain(
-                row, lambda x: x.find_all("td"), 0, lambda x: x.find_all("a"), 0
+            series_temp_url = opt_chain(
+                row,
+                "td",
+                "a",
+                "attrs",
+                "href",
             )
-
-            series_temp_url = opt_chain(first_cell_data, "attrs", "href")
 
             if series_temp_url is not None:
                 series = {
@@ -120,9 +118,6 @@ class SearchRequest:
 
     def get_series(self) -> dict[str, str] | None:
         soup = BeautifulSoup(self.get_search_page().text, "html.parser")
-
-        if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
-            raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
 
         series = self.aggregate_series_data(soup)
 
