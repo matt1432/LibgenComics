@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .lib import attempt_request, opt_chain
+from .series import Series
 
 
 class SearchRequest:
@@ -24,7 +25,7 @@ class SearchRequest:
             search_url = f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=25&page={page}"
         return attempt_request(search_url)
 
-    def aggregate_series_data(self, soup: BeautifulSoup) -> dict[str, str] | None:
+    def aggregate_series_data(self, soup: BeautifulSoup) -> Series | None:
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
             raise Exception(opt_chain(soup.find_all("center"), 0, "string"))
 
@@ -44,40 +45,14 @@ class SearchRequest:
             )
 
             if series_temp_url is not None:
-                series = {
-                    "Comicvine": "",
-                    "ID": series_temp_url.replace("series.php?id=", "").strip(),
-                    "Language": "",
-                }
+                series_id = series_temp_url.replace("series.php?id=", "").strip()
+                series = Series(series_id)
 
-                series_url = f"https://libgen.gs/json.php?object=s&ids={series['ID']}&fields=*&addkeys=309,101"
-                series_results = {
-                    "add": {},
-                    **list(json.loads(attempt_request(series_url).text).values())[0],
-                }
-
-                for added_key in series_results["add"].values():
-                    if added_key["key"] == "101":
-                        series["Language"] = added_key["value"]
-
-                    elif added_key["value"].startswith(
-                        "https://comicvine.gamespot.com"
-                    ):
-                        series["Comicvine"] = added_key["value"]
-
-                if series["Comicvine"] == self.comicvine_url:
-                    return {
-                        "Title": series_results["title"],
-                        "Publisher": series_results["publisher"],
-                        "Started": series_results["date_start"],
-                        "Ended": series_results["date_end"],
-                        "Added": series_results["time_added"],
-                        "Edited": series_results["time_last_modified"],
-                        **series,
-                    }
+                if series.comicvine_url == self.comicvine_url:
+                    return series
         return None
 
-    def get_series(self) -> dict[str, str] | None:
+    def get_series(self) -> Series | None:
         soup = BeautifulSoup(self.get_search_page().text, "html.parser")
 
         series = self.aggregate_series_data(soup)
@@ -106,7 +81,7 @@ class SearchRequest:
             return []
 
         series_url = (
-            f"https://libgen.gs/json.php?object=s&fields=editions&ids={series['ID']}"
+            f"https://libgen.gs/json.php?object=s&fields=editions&ids={str(series.id)}"
         )
         edition_ids = list(
             list(json.loads(attempt_request(series_url).text).values())[0][
@@ -124,7 +99,7 @@ class SearchRequest:
                 {
                     "Number": edition["issue_total_number"],
                     "ID": ed_id,
-                    "Comicvine": series["Comicvine"],
+                    "Comicvine": series.comicvine_url,
                     "Title": edition["title"],
                     "Author": edition["author"],
                     "Publisher": edition["publisher"],
