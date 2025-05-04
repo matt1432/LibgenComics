@@ -80,14 +80,7 @@ class SearchRequest:
         if series is None:
             return []
 
-        series_url = (
-            f"https://libgen.gs/json.php?object=s&fields=editions&ids={str(series.id)}"
-        )
-        edition_ids = list(
-            list(json.loads(attempt_request(series_url).text).values())[0][
-                "editions"
-            ].keys()
-        )
+        edition_ids = list(series.get("editions").keys())
 
         output_data = []
 

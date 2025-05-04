@@ -1,6 +1,7 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 from .lib import attempt_request
 
@@ -9,6 +10,7 @@ from .lib import attempt_request
 class Series:
     id: int
     libgen_api_url: str
+    json_obj: Any
 
     title: str
     publisher: str
@@ -30,11 +32,11 @@ class Series:
         self.id = int(id)
         self.libgen_api_url = f"https://libgen.gs/json.php?object=s&ids={self.id}&fields=*&addkeys=309,101"
 
-        json_obj = json.loads(attempt_request(self.libgen_api_url).text)
+        self.json_obj = json.loads(attempt_request(self.libgen_api_url).text)
 
         series_results = {
             "add": {},
-            **list(json_obj.values())[0],
+            **list(self.json_obj.values())[0],
         }
 
         for added_key in series_results["add"].values():
@@ -62,6 +64,9 @@ class Series:
         self.time_last_modified = datetime.fromisoformat(
             series_results["time_last_modified"]
         )
+
+    def get(self, key: str) -> Any:
+        return list(self.json_obj.values())[0][key]
 
     def __str__(self) -> str:
         return f"""{{
