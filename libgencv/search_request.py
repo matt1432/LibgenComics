@@ -1,48 +1,9 @@
 import json
-from collections.abc import Callable
-from inspect import isfunction
-from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
 
-# WHY
-# The SearchRequest module contains all the internal logic for the library.
-#
-# This encapsulates the logic,
-# ensuring users can work at a higher level of abstraction.
-
-# USAGE
-# req = search_request.SearchRequest("[QUERY]", search_type="[title]")
-
-
-def attempt_request(url: str) -> requests.Response:
-    while True:
-        try:
-            return requests.get(url)
-        except ConnectionError as e:
-            print(e)
-            return requests.get(url)
-
-
-# attempts to chain attributes, indexes or functions of the root object
-def opt_chain(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | None:
-    result = root
-    for k in keys:
-        if isinstance(result, dict):
-            result = result.get(k, None)
-        elif isinstance(result, list) and isinstance(k, int):
-            if k < len(result):
-                result = result[k]
-            else:
-                result = None
-        elif isfunction(k):
-            result = k(result)
-        else:
-            result = getattr(result, str(k), None)
-        if result is None:
-            break
-    return result
+from .lib import attempt_request, opt_chain
 
 
 class SearchRequest:
