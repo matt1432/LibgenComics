@@ -16,6 +16,15 @@ from bs4 import BeautifulSoup
 # req = search_request.SearchRequest("[QUERY]", search_type="[title]")
 
 
+def attempt_request(url: str) -> requests.Response:
+    while True:
+        try:
+            return requests.get(url)
+        except ConnectionError as e:
+            print(e)
+            return requests.get(url)
+
+
 # attempts to chain attributes, indexes or functions of the root object
 def opt_chain(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | None:
     result = root
@@ -52,31 +61,13 @@ class SearchRequest:
         query_parsed = "%20".join(self.query.split(" "))
         if page is None:
             search_url = (
-                f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=100"
+                f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=25"
             )
         else:
-            search_url = f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=100&page={page}"
-        return requests.get(search_url)
+            search_url = f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=25&page={page}"
+        return attempt_request(search_url)
 
-    def add_comicvine_url(
-        self, output_data: list[dict[str, str]]
-    ) -> list[dict[str, str]]:
-        for series in output_data:
-            if series["ID"] != "":
-                series_url = f"https://libgen.gs/json.php?object=s&ids={series['ID']}&fields=*&addkeys=309"
-                series_results = list(
-                    json.loads(requests.get(series_url).text).values()
-                )[0]
-
-                if "add" in series_results:
-                    for added_key in series_results["add"].values():
-                        if added_key["value"].startswith(
-                            "https://comicvine.gamespot.com"
-                        ):
-                            series["Comicvine"] = added_key["value"]
-        return output_data
-
-    def aggregate_series_data(self, soup: BeautifulSoup) -> list[dict[str, str]]:
+    def aggregate_series_data(self, soup: BeautifulSoup) -> dict[str, str] | None:
         if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
             raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
 
@@ -84,56 +75,48 @@ class SearchRequest:
         information_table = opt_chain(soup.find(id="tablelibgen"), "tbody")
 
         if information_table is None:
-            return []
-
-        output_data = []
+            return None
 
         for row in information_table.find_all("tr"):
             first_cell_data = opt_chain(
                 row, lambda x: x.find_all("td"), 0, lambda x: x.find_all("a"), 0
             )
 
-            add_edit = (
-                opt_chain_str(
-                    first_cell_data, "attrs", "title", lambda x: x.split("<br>"), 0
-                )
-                .replace("Time added/Time modified : ", "")
-                .split("/")
-            )
+            series_temp_url = opt_chain(first_cell_data, "attrs", "href")
 
-            published_period = (
-                opt_chain_str(row, lambda x: x.find_all("td"), 1, "nobr", "string")
-                .strip()
-                .split("―")
-            )
-
-            output_data.append(
-                {
-                    "Title": opt_chain_str(first_cell_data, "string").strip(),
-                    "ID": opt_chain_str(first_cell_data, "attrs", "href")
-                    .replace("series.php?id=", "")
-                    .strip(),
-                    "Add": opt_chain_str(add_edit, 0).strip(),
-                    "Edit": opt_chain_str(add_edit, 1).strip(),
-                    "Started": opt_chain_str(published_period, 0),
-                    "Ended": opt_chain_str(published_period, 1),
-                    "Publisher": opt_chain_str(
-                        row,
-                        lambda x: x.find_all("td"),
-                        2,
-                        lambda x: ";".join(
-                            map(lambda x: opt_chain_str(x, "string"), x.find_all("a"))
-                        ),
-                        "string",
-                    ).strip(),
-                    "Language": opt_chain_str(
-                        row, lambda x: x.find_all("td"), 3, "string"
-                    ).strip(),
+            if series_temp_url is not None:
+                series = {
                     "Comicvine": "",
+                    "ID": series_temp_url.replace("series.php?id=", "").strip(),
+                    "Language": "",
                 }
-            )
-        output_data = self.add_comicvine_url(output_data)
-        return output_data
+
+                series_url = f"https://libgen.gs/json.php?object=s&ids={series['ID']}&fields=*&addkeys=309,101"
+                series_results = {
+                    "add": {},
+                    **list(json.loads(attempt_request(series_url).text).values())[0],
+                }
+
+                for added_key in series_results["add"].values():
+                    if added_key["key"] == "101":
+                        series["Language"] = added_key["value"]
+
+                    elif added_key["value"].startswith(
+                        "https://comicvine.gamespot.com"
+                    ):
+                        series["Comicvine"] = added_key["value"]
+
+                if series["Comicvine"] == self.comicvine_url:
+                    return {
+                        "Title": series_results["title"],
+                        "Publisher": series_results["publisher"],
+                        "Started": series_results["date_start"],
+                        "Ended": series_results["date_end"],
+                        "Added": series_results["time_added"],
+                        "Edited": series_results["time_last_modified"],
+                        **series,
+                    }
+        return None
 
     def get_series(self) -> dict[str, str] | None:
         soup = BeautifulSoup(self.get_search_page().text, "html.parser")
@@ -141,21 +124,23 @@ class SearchRequest:
         if opt_chain_str(soup.find_all("center"), 1, "string") == "nginx":
             raise Exception(opt_chain_str(soup.find_all("center"), 0, "string"))
 
+        series = self.aggregate_series_data(soup)
+
+        if series is not None:
+            return series
+
         if soup.find(id="paginator_example_top") is not None:
-            page = 1
+            page = 2
+            soup = BeautifulSoup(self.get_search_page(page).text, "html.parser")
 
             while soup.find("tbody") is not None:
-                for series in self.aggregate_series_data(soup):
-                    if series["Comicvine"] == self.comicvine_url:
-                        return series
+                series = self.aggregate_series_data(soup)
+
+                if series is not None:
+                    return series
 
                 page += 1
                 soup = BeautifulSoup(self.get_search_page(page).text, "html.parser")
-        else:
-            for series in self.aggregate_series_data(soup):
-                if series["Comicvine"] == self.comicvine_url:
-                    return series
-
         return None
 
     def fetch_editions_data(self) -> list[dict[str, str]]:
@@ -168,7 +153,7 @@ class SearchRequest:
             f"https://libgen.gs/json.php?object=s&fields=editions&ids={series['ID']}"
         )
         edition_ids = list(
-            list(json.loads(requests.get(series_url).text).values())[0][
+            list(json.loads(attempt_request(series_url).text).values())[0][
                 "editions"
             ].keys()
         )
@@ -177,7 +162,7 @@ class SearchRequest:
 
         for ed_id in edition_ids:
             ed_url = f"https://libgen.gs/json.php?object=e&ids={ed_id}"
-            edition = list(json.loads(requests.get(ed_url).text).values())[0]
+            edition = list(json.loads(attempt_request(ed_url).text).values())[0]
 
             output_data.append(
                 {
@@ -203,14 +188,16 @@ class SearchRequest:
             f"https://libgen.gs/json.php?object=e&fields=files&ids={issue['ID']}"
         )
         files_results = list(
-            list(json.loads(requests.get(files_url).text).values())[0]["files"].values()
+            list(json.loads(attempt_request(files_url).text).values())[0][
+                "files"
+            ].values()
         )
 
         output_data = []
 
         for file_result in files_results:
             file_url = f"https://libgen.gs/json.php?object=f&ids={file_result['f_id']}"
-            file = list(json.loads(requests.get(file_url).text).values())[0]
+            file = list(json.loads(attempt_request(file_url).text).values())[0]
 
             if file["broken"] == "N":
                 output_data.append(
