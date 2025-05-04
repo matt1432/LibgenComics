@@ -3,6 +3,7 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
+from .edition import Edition
 from .lib import attempt_request, opt_chain
 from .series import Series
 
@@ -74,48 +75,22 @@ class SearchRequest:
                 soup = BeautifulSoup(self.get_search_page(page).text, "html.parser")
         return None
 
-    def fetch_editions_data(self) -> list[dict[str, str]]:
+    def fetch_editions_data(self) -> list[Edition]:
         series = self.get_series()
 
         if series is None:
             return []
 
+        output_data: list[Edition] = []
         edition_ids = list(series.get("editions").keys())
 
-        output_data = []
-
         for ed_id in edition_ids:
-            ed_url = f"https://libgen.gs/json.php?object=e&ids={ed_id}"
-            edition = list(json.loads(attempt_request(ed_url).text).values())[0]
+            output_data.append(Edition(ed_id, series.comicvine_url))
 
-            output_data.append(
-                {
-                    "Number": edition["issue_total_number"],
-                    "ID": ed_id,
-                    "Comicvine": series.comicvine_url,
-                    "Title": edition["title"],
-                    "Author": edition["author"],
-                    "Publisher": edition["publisher"],
-                    "Year": edition["year"],
-                    "Month": edition["month"],
-                    "Day": edition["day"],
-                    "Pages": edition["pages"],
-                    "Cover": edition["cover_url"],
-                    "Added": edition["time_added"],
-                    "Edited": edition["time_last_modified"],
-                }
-            )
         return output_data
 
-    def fetch_files_data(self, issue: dict[str, str]) -> list[dict[str, str]]:
-        files_url = (
-            f"https://libgen.gs/json.php?object=e&fields=files&ids={issue['ID']}"
-        )
-        files_results = list(
-            list(json.loads(attempt_request(files_url).text).values())[0][
-                "files"
-            ].values()
-        )
+    def fetch_files_data(self, issue: Edition) -> list[dict[str, str]]:
+        files_results = list(issue.get("files").values())
 
         output_data = []
 
@@ -129,7 +104,7 @@ class SearchRequest:
                         "Download": f"https://libgen.gl/get.php?md5={file['md5']}",
                         "Filename": file["locator"].split("\\")[-1],
                         "Pages": file["archive_files_pic_count"],
-                        "Comicvine": issue["Comicvine"],
+                        "Comicvine": issue.comicvine_series_url,
                         "DPI": file["dpi"],
                         "Added": file["time_added"],
                         "Edited": file["time_last_modified"],

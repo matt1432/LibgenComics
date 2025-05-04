@@ -1,5 +1,6 @@
 from pycomicvine import Volume
 
+from .edition import Edition
 from .lib import filter_results
 from .search_request import SearchRequest
 
@@ -14,12 +15,11 @@ class LibgenSearch:
         )
         editions = series_request.fetch_editions_data()
 
-        filtered_editions = []
+        filtered_editions: list[Edition] = []
 
         for edition in editions:
-            if edition["Number"] == str(issue_number):
-                if edition["Pages"] == "" or int(edition["Pages"]) > 2:
-                    filtered_editions.append(edition)
+            if edition.number == issue_number:
+                filtered_editions.append(edition)
 
         files = []
         for filtered_ed in filtered_editions:
