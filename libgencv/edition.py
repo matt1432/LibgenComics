@@ -13,12 +13,12 @@ class Edition:
     json_obj: Any
     comicvine_series_url: str
 
-    number: int
+    number: str
     title: str
     author: str
     publisher: str
     year: int | None
-    month: int | None
+    month: str | None
     day: int | None
     pages: int | None
     cover_url: str
@@ -51,7 +51,7 @@ class Edition:
         self.month = (
             None
             if edition_results["month"] is None or edition_results["month"] == ""
-            else int(edition_results["month"])
+            else edition_results["month"]
         )
 
         self.day = (
@@ -79,7 +79,7 @@ class Edition:
     id: "{str(self.id)}",
     comicvine_series_url: "{self.comicvine_series_url}",
 
-    number: "{str(self.number)}",
+    number: "{self.number}",
     title: "{self.title}",
     author: "{self.author}",
     publisher: "{self.publisher}",

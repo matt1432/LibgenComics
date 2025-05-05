@@ -1,10 +1,9 @@
-import json
-
 import requests
 from bs4 import BeautifulSoup
 
 from .edition import Edition
 from .lib import attempt_request, opt_chain
+from .result_file import ResultFile
 from .series import Series
 
 
@@ -89,31 +88,15 @@ class SearchRequest:
 
         return output_data
 
-    def fetch_files_data(self, issue: Edition) -> list[dict[str, str]]:
+    def fetch_files_data(self, issue: Edition) -> list[ResultFile]:
         files_results = list(issue.get("files").values())
 
         output_data = []
 
         for file_result in files_results:
-            file_url = f"https://libgen.gs/json.php?object=f&ids={file_result['f_id']}"
-            file = list(json.loads(attempt_request(file_url).text).values())[0]
+            file = ResultFile(file_result["f_id"], issue.comicvine_series_url)
 
-            if file["broken"] == "N":
-                output_data.append(
-                    {
-                        "Download": f"https://libgen.gl/get.php?md5={file['md5']}",
-                        "Filename": file["locator"].split("\\")[-1],
-                        "Pages": file["archive_files_pic_count"],
-                        "Comicvine": issue.comicvine_series_url,
-                        "DPI": file["dpi"],
-                        "Added": file["time_added"],
-                        "Edited": file["time_last_modified"],
-                        "Size": file["filesize"],
-                        "Extension": file["extension"],
-                        "Created": file["file_create_date"],
-                        "Type": file["scan_type"],
-                        "Releaser": file["releaser"],
-                        "Resolution": file["scan_size"],
-                    }
-                )
+            if not file.broken:
+                output_data.append(file)
+
         return output_data
