@@ -9,7 +9,7 @@ def attempt_request(url: str) -> requests.Response:
     while True:
         try:
             return requests.get(url)
-        except ConnectionError as e:
+        except requests.exceptions.ConnectionError as e:
             print(e)
             return requests.get(url)
 
