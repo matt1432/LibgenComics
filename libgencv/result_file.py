@@ -23,7 +23,7 @@ class ResultFile:
     resolution: str
     dpi: str
 
-    time_created: datetime
+    time_created: datetime | None
     time_added: datetime
     time_last_modified: datetime
 
@@ -34,6 +34,7 @@ class ResultFile:
 
         self.id = int(id)
         self.libgen_api_url = f"https://libgen.gs/json.php?object=f&ids={self.id}"
+        print(self.libgen_api_url)
         self.json_obj = json.loads(attempt_request(self.libgen_api_url).text)
 
         file_results = list(self.json_obj.values())[0]
@@ -52,7 +53,11 @@ class ResultFile:
             self.filesize = int(file_results["filesize"])
             self.pages = int(file_results["archive_files_pic_count"])
 
-            self.time_created = datetime.fromisoformat(file_results["file_create_date"])
+            self.time_created = (
+                None
+                if file_results["file_create_date"] == "0000-00-00 00:00:00"
+                else datetime.fromisoformat(file_results["file_create_date"])
+            )
             self.time_added = datetime.fromisoformat(file_results["time_added"])
             self.time_last_modified = datetime.fromisoformat(
                 file_results["time_last_modified"]

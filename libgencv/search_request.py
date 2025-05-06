@@ -8,12 +8,12 @@ from .series import Series
 
 
 class SearchRequest:
-    def __init__(self, query: str, comicvine_url: str) -> None:
+    def __init__(
+        self, query: str, comicvine_url: str, libgen_series_url: str | None = None
+    ) -> None:
         self.query = query
         self.comicvine_url = comicvine_url
-
-        if len(self.query) < 3:
-            raise Exception("Query is too short")
+        self.libgen_series_url = libgen_series_url
 
     def get_search_page(self, page: int | None = None) -> requests.Response:
         query_parsed = "%20".join(self.query.split(" "))
@@ -53,8 +53,19 @@ class SearchRequest:
         return None
 
     def get_series(self) -> Series | None:
-        soup = BeautifulSoup(self.get_search_page().text, "html.parser")
+        if self.libgen_series_url is not None:
+            if not self.libgen_series_url.startswith(
+                "https://libgen.gs/series.php?id="
+            ):
+                # TODO: better exception
+                raise Exception("Incorrect URL")
+            return Series(
+                self.libgen_series_url.replace(
+                    "https://libgen.gs/series.php?id=", ""
+                ).replace("/", "")
+            )
 
+        soup = BeautifulSoup(self.get_search_page().text, "html.parser")
         series = self.aggregate_series_data(soup)
 
         if series is not None:

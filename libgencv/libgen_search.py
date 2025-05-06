@@ -5,13 +5,16 @@ from .result_file import ResultFile
 from .search_request import SearchRequest
 
 
-# TODO: add search from comicvine ID and supplied libgen.gs series url
 class LibgenSearch:
-    def search_comicvine_id(self, id: int, issue_number: str) -> list[ResultFile]:
+    def search_comicvine_id(
+        self, id: int, issue_number: str, libgen_series_url: str | None = None
+    ) -> list[ResultFile]:
         cv_volume: Volume = Volume(id, all=True)  # type: ignore
 
         series_request = SearchRequest(
-            str(cv_volume.name), str(cv_volume.site_detail_url)
+            str(cv_volume.name),
+            str(cv_volume.site_detail_url),
+            libgen_series_url,
         )
 
         editions = series_request.fetch_editions_data()
