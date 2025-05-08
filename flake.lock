@@ -16,36 +16,9 @@
         "type": "github"
       }
     },
-    "pycomicvine": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "systems": [
-          "systems"
-        ],
-        "treefmt-nix": [
-          "treefmt-nix"
-        ]
-      },
-      "locked": {
-        "lastModified": 1746720228,
-        "narHash": "sha256-OQ1Z4ATw7SvUcNK9+DmxiccKSVjN4TdQqckgVtDBej4=",
-        "owner": "matt1432",
-        "repo": "pycomicvine",
-        "rev": "69913f1c5175ab9eb0103ead1311ff44798b6d00",
-        "type": "github"
-      },
-      "original": {
-        "owner": "matt1432",
-        "repo": "pycomicvine",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
-        "pycomicvine": "pycomicvine",
         "systems": "systems",
         "treefmt-nix": "treefmt-nix"
       }

@@ -1,4 +1,5 @@
-from pycomicvine import Volume
+from simyan.comicvine import Comicvine
+from simyan.schemas.volume import Volume
 
 from .edition import Edition
 from .result_file import ResultFile
@@ -7,13 +8,19 @@ from .search_request import SearchRequest
 
 class LibgenSearch:
     def search_comicvine_id(
-        self, id: int, issue_number: str, libgen_series_url: str | None = None
+        self,
+        api_key: str,
+        id: int,
+        issue_number: str,
+        libgen_series_url: str | None = None,
     ) -> list[ResultFile]:
-        cv_volume: Volume = Volume(id, all=True)  # type: ignore
+        session = Comicvine(api_key=api_key)
+
+        cv_volume: Volume = session.get_volume(volume_id=id)
 
         series_request = SearchRequest(
-            str(cv_volume.name),
-            str(cv_volume.site_detail_url),
+            cv_volume.name,
+            str(cv_volume.site_url),
             libgen_series_url,
         )
 

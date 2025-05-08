@@ -7,17 +7,6 @@
       ref = "nixos-unstable";
     };
 
-    pycomicvine = {
-      type = "github";
-      owner = "matt1432";
-      repo = "pycomicvine";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        systems.follows = "systems";
-        treefmt-nix.follows = "treefmt-nix";
-      };
-    };
-
     systems = {
       type = "github";
       owner = "nix-systems";
@@ -36,18 +25,16 @@
     self,
     systems,
     nixpkgs,
-    pycomicvine,
     treefmt-nix,
     ...
   }: let
-    inherit (builtins) fromTOML readFile;
+    inherit (builtins) fromTOML readFile substring;
 
     perSystem = attrs:
       nixpkgs.lib.genAttrs (import systems) (system:
         attrs (import nixpkgs {
           inherit system;
           overlays = [
-            pycomicvine.overlays.default
             self.overlays.default
           ];
         }));
@@ -55,16 +42,51 @@
     overlays.default = _final: prev: {
       python3Packages = prev.python3Packages.override {
         overrides = pyFinal: _pyPrev: {
-          inherit (prev.python3Packages) pycomicvine;
+          simyan = pyFinal.callPackage ({
+            # nix build inputs
+            buildPythonPackage,
+            fetchFromGitHub,
+            # python deps
+            eval-type-backport,
+            hatchling,
+            pydantic,
+            ratelimit,
+            requests,
+            ...
+          }: let
+            pname = "simyan";
+            rev = "92050acb36eace59419a98a86f74c87f55f53034";
+            src = fetchFromGitHub {
+              owner = "Metron-Project";
+              repo = "Simyan";
+              inherit rev;
+              hash = "sha256-DfbjfxSMlxYo4qDJMJ9btr09iU9wHSV8QYRiptsxlXQ=";
+            };
+          in
+            buildPythonPackage {
+              inherit pname src;
+              version = "1.4.0+${substring 0 7 rev}";
+              format = "pyproject";
+
+              build-system = [hatchling];
+              dependencies = [
+                eval-type-backport
+                pydantic
+                ratelimit
+                requests
+              ];
+
+              pythonImportChecks = [pname];
+            }) {};
 
           libgencomics = pyFinal.callPackage ({
             # nix build inputs
             buildPythonPackage,
             # python deps
             beautifulsoup4,
-            pycomicvine,
             requests,
             setuptools,
+            simyan,
             ...
           }: let
             pname = "libgencomics";
@@ -79,8 +101,8 @@
               build-system = [setuptools];
               dependencies = [
                 beautifulsoup4
-                pycomicvine
                 requests
+                simyan
               ];
 
               pythonImportChecks = [pname];
@@ -109,8 +131,8 @@
             with python3Packages; [
               beautifulsoup4
               libgencomics
-              pycomicvine
               requests
+              simyan
             ]))
         ];
       };

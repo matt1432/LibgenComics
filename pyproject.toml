@@ -14,8 +14,8 @@ classifiers = [
 ]
 dependencies = [
   "beautifulsoup4",
-  "pycomicvine @ git+https://github.com/matt1432/pycomicvine.git@main",
-  "requests"
+  "requests",
+  "simyan"
 ]
 
 [tool.mypy]
@@ -27,7 +27,7 @@ disallow_untyped_defs = true
 no_implicit_optional = true
 
 [[tool.mypy.overrides]]
-module = ["pycomicvine.*"]
+module = ["simyan.*"]
 follow_untyped_imports = true
 
 [tool.ruff]
