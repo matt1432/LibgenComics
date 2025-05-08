@@ -70,7 +70,7 @@
               pythonImportChecks = [pname];
             }) {};
 
-          libgencv = pyFinal.callPackage ({
+          libgencomics = pyFinal.callPackage ({
             # nix build inputs
             buildPythonPackage,
             # python deps
@@ -80,7 +80,7 @@
             setuptools,
             ...
           }: let
-            pname = "libgencv";
+            pname = "libgencomics";
             tag = (builtins.fromTOML (builtins.readFile ./pyproject.toml)).project.version;
           in
             buildPythonPackage {
@@ -101,9 +101,9 @@
     };
 
     packages = perSystem (pkgs: {
-      inherit (pkgs.python3Packages) libgen-api-comicvine;
+      inherit (pkgs.python3Packages) libgencomics;
 
-      default = pkgs.python3Packages.libgen-api-comicvine;
+      default = pkgs.python3Packages.libgencomics;
     });
 
     formatter = perSystem (pkgs: let
@@ -119,7 +119,7 @@
           (python3Packages.python.withPackages (_ps:
             with python3Packages; [
               beautifulsoup4
-              libgencv
+              libgencomics
               pycomicvine
               requests
             ]))

@@ -8,14 +8,14 @@ python3 test.py
 
 """
 
-from libgencv import LibgenSearch
+from libgencomics import LibgenSearch
 
 with open(".api") as file:
     import pycomicvine
 
     pycomicvine.api_key = file.read().replace("\n", "")
 
-id = 10379
+id = 43539
 
 
 def print_results(arr):
@@ -28,7 +28,7 @@ t = LibgenSearch()
 print("\n>>>\tSearching for Comicvine ID: " + str(id))
 
 try:
-    titles = t.search_comicvine_id(id, "25", "https://libgen.gs/series.php?id=110830")
+    titles = t.search_comicvine_id(id, "13", "https://libgen.gs/series.php?id=117226")
     print_results(titles)
 except KeyboardInterrupt:
     print("\nExiting program...")

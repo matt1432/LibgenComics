@@ -8,7 +8,7 @@ python3 test.py
 
 """
 
-from libgencv import LibgenSearch
+from libgencomics import LibgenSearch
 
 with open(".api") as file:
     import pycomicvine

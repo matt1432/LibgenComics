@@ -3,7 +3,7 @@ requires = ["setuptools", "beautifulsoup4", "pycomicvine", "requests"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "libgen-api-comicvine"
+name = "libgencomics"
 version = "0.0.1a1"
 description = "Search Library genesis by Comicvine volume ID"
 license = "MIT"
