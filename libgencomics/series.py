@@ -28,7 +28,9 @@ class Series:
     comicvine_url: str = ""
     language: str = ""
 
-    def __init__(self, id: str):
+    def __init__(self, id: str, comicvine_url: str | None = None):
+        self.comicvine_url = "" if comicvine_url is None else comicvine_url
+
         self.id = int(id)
         self.libgen_api_url = f"https://libgen.gs/json.php?object=s&ids={self.id}&fields=*&addkeys=309,101"
 

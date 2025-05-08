@@ -62,7 +62,8 @@ class SearchRequest:
             return Series(
                 self.libgen_series_url.replace(
                     "https://libgen.gs/series.php?id=", ""
-                ).replace("/", "")
+                ).replace("/", ""),
+                self.comicvine_url,
             )
 
         soup = BeautifulSoup(self.get_search_page().text, "html.parser")

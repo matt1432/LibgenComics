@@ -4,10 +4,10 @@
   programs.mypy = {
     enable = true;
     directories."" = {
-      modules = ["libgencv"];
-      extraPythonPackages = with pkgs.python3Packages; (libgencv.dependencies
+      modules = ["libgencomics"];
+      extraPythonPackages = with pkgs.python3Packages; (libgencomics.dependencies
         ++ [
-          libgencv
+          libgencomics
           types-beautifulsoup4
           types-requests
         ]);
