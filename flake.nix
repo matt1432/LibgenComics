@@ -7,6 +7,17 @@
       ref = "nixos-unstable";
     };
 
+    pycomicvine = {
+      type = "github";
+      owner = "matt1432";
+      repo = "pycomicvine";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        systems.follows = "systems";
+        treefmt-nix.follows = "treefmt-nix";
+      };
+    };
+
     systems = {
       type = "github";
       owner = "nix-systems";
@@ -25,14 +36,18 @@
     self,
     systems,
     nixpkgs,
+    pycomicvine,
     treefmt-nix,
     ...
   }: let
+    inherit (builtins) fromTOML readFile;
+
     perSystem = attrs:
       nixpkgs.lib.genAttrs (import systems) (system:
         attrs (import nixpkgs {
           inherit system;
           overlays = [
+            pycomicvine.overlays.default
             self.overlays.default
           ];
         }));
@@ -40,35 +55,7 @@
     overlays.default = _final: prev: {
       python3Packages = prev.python3Packages.override {
         overrides = pyFinal: _pyPrev: {
-          pycomicvine = pyFinal.callPackage ({
-            # nix build inputs
-            buildPythonPackage,
-            fetchFromGitHub,
-            # python deps
-            simplejson,
-            python-dateutil,
-            ...
-          }:
-            buildPythonPackage rec {
-              pname = "pycomicvine";
-              version = "1.0.0";
-
-              format = "setuptools";
-
-              src = fetchFromGitHub {
-                owner = "miri64";
-                repo = pname;
-                rev = "bfc72ceb585c7d63bd5c603a51e838f81ce2d348";
-                hash = "sha256-vfqfcR4qFK9exLv727ppEJLEpwwGMd/xnLuMF6mXeP4=";
-              };
-
-              postPatch = ''
-                substituteInPlace ./setup.py --replace-fail "**extra" ""
-              '';
-
-              dependencies = [simplejson python-dateutil];
-              pythonImportChecks = [pname];
-            }) {};
+          inherit (prev.python3Packages) pycomicvine;
 
           libgencomics = pyFinal.callPackage ({
             # nix build inputs
@@ -81,20 +68,22 @@
             ...
           }: let
             pname = "libgencomics";
-            tag = (builtins.fromTOML (builtins.readFile ./pyproject.toml)).project.version;
+            tag = (fromTOML (readFile ./pyproject.toml)).project.version;
           in
             buildPythonPackage {
               inherit pname;
               version = "${tag}+${self.shortRev or "dirty"}";
               format = "pyproject";
               src = ./.;
+
               build-system = [setuptools];
               dependencies = [
                 beautifulsoup4
                 pycomicvine
                 requests
               ];
-              pythonImportChecks = ["libgencv"];
+
+              pythonImportChecks = [pname];
             }) {};
         };
       };

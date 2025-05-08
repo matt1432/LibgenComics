@@ -1,9 +1,9 @@
 [build-system]
-requires = ["setuptools", "beautifulsoup4", "pycomicvine", "requests"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "libgencomics"
+name = "LibgenComics"
 version = "0.0.1a1"
 description = "Search Library genesis by Comicvine volume ID"
 license = "MIT"
@@ -11,6 +11,11 @@ classifiers = [
   "Intended Audience :: Developers",
   "Topic :: Software Development :: Libraries",
   "Programming Language :: Python :: 3"
+]
+dependencies = [
+  "beautifulsoup4",
+  "pycomicvine @ git+https://github.com/matt1432/pycomicvine.git@main",
+  "requests"
 ]
 
 [tool.mypy]

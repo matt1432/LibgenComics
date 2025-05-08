@@ -8,11 +8,11 @@ python3 test.py
 
 """
 
+import pycomicvine
+
 from libgencomics import LibgenSearch
 
 with open(".api") as file:
-    import pycomicvine
-
     pycomicvine.api_key = file.read().replace("\n", "")
 
 id = 43539
