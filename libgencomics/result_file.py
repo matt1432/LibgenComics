@@ -34,7 +34,6 @@ class ResultFile:
 
         self.id = int(id)
         self.libgen_api_url = f"https://libgen.gs/json.php?object=f&ids={self.id}"
-        print(self.libgen_api_url)
         self.json_obj = json.loads(attempt_request(self.libgen_api_url).text)
 
         file_results = list(self.json_obj.values())[0]
