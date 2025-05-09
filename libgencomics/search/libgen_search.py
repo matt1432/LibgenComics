@@ -11,7 +11,7 @@ class LibgenSearch:
         self,
         api_key: str,
         id: int,
-        issue_number: str,
+        issue_number: str | None = None,
         libgen_series_url: str | None = None,
     ) -> list[ResultFile]:
         session = Comicvine(api_key=api_key)
@@ -28,7 +28,7 @@ class LibgenSearch:
         filtered_editions: list[Edition] = []
 
         for edition in editions:
-            if edition.number == issue_number:
+            if issue_number is None or edition.number == issue_number:
                 filtered_editions.append(edition)
 
         files: list[ResultFile] = []
