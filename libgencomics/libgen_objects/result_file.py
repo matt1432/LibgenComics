@@ -3,12 +3,13 @@ from datetime import datetime
 
 from libgencomics.common import parse_value
 
+from .edition import Edition
 from .libgen_object import LibgenObject
 
 
 @dataclass
 class ResultFile(LibgenObject):
-    comicvine_series_url: str
+    issue: Edition
 
     broken: bool = False
 
@@ -26,11 +27,11 @@ class ResultFile(LibgenObject):
     time_added: datetime | None = None
     time_last_modified: datetime | None = None
 
-    def __init__(self, id: str, comicvine_url: str):
+    def __init__(self, id: str, issue: Edition):
         super().__init__(id, "https://libgen.gs/json.php?object=f&ids=")
         file_results = list(self.json_obj.values())[0]
 
-        self.comicvine_series_url = comicvine_url
+        self.issue = issue
 
         if "broken" not in file_results or file_results["broken"] != "N":
             self.broken = True
@@ -66,7 +67,6 @@ class ResultFile(LibgenObject):
     def __json__(self) -> dict[str, str | int | None]:
         return super().__to_json__(
             [
-                "comicvine_series_url",
                 "download_link",
                 "dpi",
                 "extension",

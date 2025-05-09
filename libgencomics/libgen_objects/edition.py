@@ -4,11 +4,12 @@ from datetime import datetime
 from libgencomics.common import parse_value
 
 from .libgen_object import LibgenObject
+from .series import Series
 
 
 @dataclass
 class Edition(LibgenObject):
-    comicvine_series_url: str
+    series: Series
 
     number: str | None
     title: str | None
@@ -23,11 +24,12 @@ class Edition(LibgenObject):
     time_added: datetime | None
     time_last_modified: datetime | None
 
-    def __init__(self, id: str, comicvine_url: str):
+    def __init__(self, id: str, series: Series):
         super().__init__(id, "https://libgen.gs/json.php?object=e&ids=")
         edition_results = list(self.json_obj.values())[0]
 
-        self.comicvine_series_url = comicvine_url
+        self.series = series
+
         self.number = parse_value(edition_results, "issue_total_number", str)
         self.title = parse_value(edition_results, "title", str)
         self.author = parse_value(edition_results, "author", str)
@@ -51,7 +53,6 @@ class Edition(LibgenObject):
         return super().__to_json__(
             [
                 "author",
-                "comicvine_series_url",
                 "cover_url",
                 "day",
                 "id",

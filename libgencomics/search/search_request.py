@@ -94,7 +94,7 @@ class SearchRequest:
         edition_ids = list(series.get("editions").keys())
 
         for ed_id in edition_ids:
-            output_data.append(Edition(ed_id, series.comicvine_url))
+            output_data.append(Edition(ed_id, series))
 
         return output_data
 
@@ -104,7 +104,7 @@ class SearchRequest:
         output_data = []
 
         for file_result in files_results:
-            file = ResultFile(file_result["f_id"], issue.comicvine_series_url)
+            file = ResultFile(file_result["f_id"], issue)
 
             if not file.broken:
                 output_data.append(file)
