@@ -7,6 +7,10 @@ from .result_file import ResultFile
 from .series import Series
 
 
+class WrongURLException(Exception):
+    pass
+
+
 class SearchRequest:
     def __init__(
         self, query: str, comicvine_url: str, libgen_series_url: str | None = None
@@ -57,8 +61,7 @@ class SearchRequest:
             if not self.libgen_series_url.startswith(
                 "https://libgen.gs/series.php?id="
             ):
-                # TODO: better exception
-                raise Exception("Incorrect URL")
+                raise WrongURLException("Incorrect URL")
             return Series(
                 self.libgen_series_url.replace(
                     "https://libgen.gs/series.php?id=", ""
