@@ -72,25 +72,31 @@ class ResultFile:
     def get(self, key: str) -> Any:
         return list(self.json_obj.values())[0][key]
 
+    def __json__(self) -> dict[str, str | int]:
+        return {
+            "id": self.id,
+            "comicvine_series_url": self.comicvine_series_url,
+            "download_link": self.download_link or "",
+            "filename": self.filename or "",
+            "filesize": self.filesize or "",
+            "pages": self.pages or "",
+            "extension": self.extension or "",
+            "releaser": self.releaser or "",
+            "scan_type": self.scan_type or "",
+            "resolution": self.resolution or "",
+            "dpi": self.dpi or "",
+            "time_created": str(self.time_created or ""),
+            "time_added": str(self.time_added or ""),
+            "time_last_modified": str(self.time_last_modified or ""),
+        }
+
     def __str__(self) -> str:
         if self.broken:
-            return "{ broken: true }"
+            return """{ "broken": true }"""
         else:
-            return f"""{{
-    id: "{self.id}",
-    comicvine_series_url: "{self.comicvine_series_url}",
-
-    download_link: "{self.download_link or ""}",
-    filename: "{self.filename or ""}",
-    filesize: "{self.filesize or ""}",
-    pages: "{self.pages or ""}",
-    extension: "{self.extension or ""}",
-    releaser: "{self.releaser or ""}",
-    scan_type: "{self.scan_type or ""}",
-    resolution: "{self.resolution or ""}",
-    dpi: "{self.dpi or ""}",
-
-    time_created: "{self.time_created or ""}",
-    time_added: "{self.time_added or ""}",
-    time_last_modified: "{self.time_last_modified or ""}",
-}}"""
+            return json.dumps(
+                self,
+                sort_keys=True,
+                indent=4,
+                default=lambda o: o.__json__() if hasattr(o, "__json__") else None,
+            )

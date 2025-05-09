@@ -73,22 +73,27 @@ class Series:
     def get(self, key: str) -> Any:
         return list(self.json_obj.values())[0][key]
 
+    def __json__(self) -> dict[str, str | int]:
+        return {
+            "id": self.id,
+            "title": self.title or "",
+            "comicvine_url": self.comicvine_url or "",
+            "publisher": self.publisher or "",
+            "language": self.language or "",
+            "year_start": self.year_start or "",
+            "month_start": self.month_start or "",
+            "day_start": self.day_start or "",
+            "year_end": self.year_end or "",
+            "month_end": self.month_end or "",
+            "day_end": self.day_end or "",
+            "time_added": str(self.time_added or ""),
+            "time_last_modified": str(self.time_last_modified or ""),
+        }
+
     def __str__(self) -> str:
-        return f"""{{
-    id: "{self.id}",
-    title: "{self.title or ""}",
-    language: "{self.language or ""}",
-    comicvine_url: "{self.comicvine_url or ""}",
-    publisher: "{self.publisher or ""}",
-
-    year_start: "{self.year_start or ""}",
-    month_start: "{self.month_start or ""}",
-    day_start: "{self.day_start or ""}",
-
-    year_end: "{self.year_end or ""}",
-    month_end: "{self.month_end or ""}",
-    day_end: "{self.day_end or ""}",
-
-    time_added: "{self.time_added}",
-    time_last_modified: "{self.time_last_modified}",
-}}"""
+        return json.dumps(
+            self,
+            sort_keys=True,
+            indent=4,
+            default=lambda o: o.__json__() if hasattr(o, "__json__") else None,
+        )

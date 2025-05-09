@@ -5,6 +5,7 @@ from typing import Any, TypeVar
 import requests
 
 
+# TODO: limit to 5 or so attempts
 def attempt_request(url: str) -> requests.Response:
     while True:
         try:
