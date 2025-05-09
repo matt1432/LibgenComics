@@ -1,8 +1,8 @@
 from simyan.comicvine import Comicvine
 from simyan.schemas.volume import Volume
 
-from .edition import Edition
-from .result_file import ResultFile
+from libgencomics.libgen_objects import Edition, ResultFile
+
 from .search_request import SearchRequest
 
 

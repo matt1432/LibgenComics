@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from .lib import attempt_request, parse_value
+from libgencomics.common import attempt_request, parse_value
 
 
 @dataclass

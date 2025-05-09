@@ -1,14 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 
-from .edition import Edition
-from .lib import attempt_request, opt_chain
-from .result_file import ResultFile
-from .series import Series
-
-
-class WrongURLException(Exception):
-    pass
+from libgencomics.common import attempt_request, opt_chain
+from libgencomics.errors import WrongURLException
+from libgencomics.libgen_objects import Edition, ResultFile, Series
 
 
 class SearchRequest:

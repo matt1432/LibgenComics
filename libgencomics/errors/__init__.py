@@ -1,0 +1,2 @@
+class WrongURLException(Exception):
+    pass

@@ -1,6 +1,6 @@
-from .edition import Edition as Edition
-from .libgen_search import LibgenSearch as LibgenSearch
-from .result_file import ResultFile as ResultFile
-from .search_request import SearchRequest as SearchRequest
-from .search_request import WrongURLException as WrongURLException
-from .series import Series as Series
+from .errors import WrongURLException as WrongURLException
+from .libgen_objects import Edition as Edition
+from .libgen_objects import ResultFile as ResultFile
+from .libgen_objects import Series as Series
+from .search import LibgenSearch as LibgenSearch
+from .search import SearchRequest as SearchRequest

@@ -16,6 +16,7 @@ def attempt_request(url: str) -> requests.Response:
 
 
 # attempts to chain attributes, indexes or functions of the root object
+# TODO: improve types
 def opt_chain(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | None:
     result = root
     for k in keys:
