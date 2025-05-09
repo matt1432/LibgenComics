@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from .lib import attempt_request
+from .lib import attempt_request, parse_value
 
 
 @dataclass
@@ -12,10 +12,10 @@ class Series:
     libgen_api_url: str
     json_obj: Any
 
-    title: str
-    publisher: str
-    time_added: datetime
-    time_last_modified: datetime
+    title: str | None = None
+    publisher: str | None = None
+    time_added: datetime | None = None
+    time_last_modified: datetime | None = None
 
     year_start: int | None = None
     month_start: int | None = None
@@ -25,11 +25,12 @@ class Series:
     month_end: int | None = None
     day_end: int | None = None
 
-    comicvine_url: str = ""
-    language: str = ""
+    comicvine_url: str | None = None
+    language: str | None = None
 
     def __init__(self, id: str, comicvine_url: str | None = None):
-        self.comicvine_url = "" if comicvine_url is None else comicvine_url
+        if comicvine_url is not None:
+            self.comicvine_url = comicvine_url
 
         self.id = int(id)
         self.libgen_api_url = f"https://libgen.gs/json.php?object=s&ids={self.id}&fields=*&addkeys=309,101"
@@ -60,11 +61,13 @@ class Series:
             self.month_end = int(date_end[1])
             self.day_end = int(date_end[2])
 
-        self.title = series_results["title"]
-        self.publisher = series_results["publisher"]
-        self.time_added = datetime.fromisoformat(series_results["time_added"])
-        self.time_last_modified = datetime.fromisoformat(
-            series_results["time_last_modified"]
+        self.title = parse_value(series_results, "title", str)
+        self.publisher = parse_value(series_results, "publisher", str)
+        self.time_added = parse_value(
+            series_results, "time_added", datetime.fromisoformat
+        )
+        self.time_last_modified = parse_value(
+            series_results, "time_last_modified", datetime.fromisoformat
         )
 
     def get(self, key: str) -> Any:
@@ -72,19 +75,19 @@ class Series:
 
     def __str__(self) -> str:
         return f"""{{
-    id: "{str(self.id)}",
-    title: "{self.title}",
-    language: "{self.language}",
-    comicvine_url: "{self.comicvine_url}",
-    publisher: "{self.publisher}",
+    id: "{self.id}",
+    title: "{self.title or ""}",
+    language: "{self.language or ""}",
+    comicvine_url: "{self.comicvine_url or ""}",
+    publisher: "{self.publisher or ""}",
 
-    year_start: "{str(self.year_start or "")}",
-    month_start: "{str(self.month_start or "")}",
-    day_start: "{str(self.day_start or "")}",
+    year_start: "{self.year_start or ""}",
+    month_start: "{self.month_start or ""}",
+    day_start: "{self.day_start or ""}",
 
-    year_end: "{str(self.year_end or "")}",
-    month_end: "{str(self.month_end or "")}",
-    day_end: "{str(self.day_end or "")}",
+    year_end: "{self.year_end or ""}",
+    month_end: "{self.month_end or ""}",
+    day_end: "{self.day_end or ""}",
 
     time_added: "{self.time_added}",
     time_last_modified: "{self.time_last_modified}",

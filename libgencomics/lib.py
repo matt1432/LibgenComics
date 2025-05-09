@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from inspect import isfunction
-from typing import Any
+from typing import Any, TypeVar
 
 import requests
 
@@ -32,3 +32,15 @@ def opt_chain(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | None:
         if result is None:
             break
     return result
+
+
+T = TypeVar("T")
+
+
+def parse_value(
+    obj: dict[str, str], key: str, parse_func: Callable[[str], T]
+) -> T | None:
+    try:
+        return parse_func(obj[key])
+    except Exception:
+        return None

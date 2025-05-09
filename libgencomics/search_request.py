@@ -92,7 +92,7 @@ class SearchRequest:
     def fetch_editions_data(self) -> list[Edition]:
         series = self.get_series()
 
-        if series is None:
+        if series is None or series.comicvine_url is None:
             return []
 
         output_data: list[Edition] = []

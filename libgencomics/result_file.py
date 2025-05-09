@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from .lib import attempt_request
+from .lib import attempt_request, parse_value
 
 
 @dataclass
@@ -13,21 +13,21 @@ class ResultFile:
     json_obj: Any
     comicvine_series_url: str
 
-    download_link: str
-    filename: str
-    filesize: int
-    pages: int
-    extension: str
-    releaser: str
-    scan_type: str
-    resolution: str
-    dpi: str
-
-    time_created: datetime | None
-    time_added: datetime
-    time_last_modified: datetime
-
     broken: bool = False
+
+    download_link: str | None = None
+    filename: str | None = None
+    filesize: int | None = None
+    pages: int | None = None
+    extension: str | None = None
+    releaser: str | None = None
+    scan_type: str | None = None
+    resolution: str | None = None
+    dpi: str | None = None
+
+    time_created: datetime | None = None
+    time_added: datetime | None = None
+    time_last_modified: datetime | None = None
 
     def __init__(self, id: str, comicvine_url: str):
         self.comicvine_series_url = comicvine_url
@@ -38,29 +38,36 @@ class ResultFile:
 
         file_results = list(self.json_obj.values())[0]
 
-        if file_results["broken"] != "N":
+        if "broken" not in file_results or file_results["broken"] != "N":
             self.broken = True
         else:
-            self.download_link = f"https://libgen.gl/get.php?md5={file_results['md5']}"
-            self.filename = file_results["locator"].split("\\")[-1]
-            self.extension = file_results["extension"]
-            self.releaser = file_results["releaser"]
-            self.scan_type = file_results["scan_type"]
-            self.resolution = file_results["scan_size"]
-            self.dpi = file_results["dpi"]
+            md5 = parse_value(file_results, "md5", str)
 
-            self.filesize = int(file_results["filesize"])
-            self.pages = int(file_results["archive_files_pic_count"])
+            if md5 is not None:
+                self.download_link = f"https://libgen.gl/get.php?md5={md5}"
 
-            self.time_created = (
-                None
-                if file_results["file_create_date"] == "0000-00-00 00:00:00"
-                else datetime.fromisoformat(file_results["file_create_date"])
-            )
-            self.time_added = datetime.fromisoformat(file_results["time_added"])
-            self.time_last_modified = datetime.fromisoformat(
-                file_results["time_last_modified"]
-            )
+                locator = parse_value(file_results, "locator", str)
+
+                self.filename = None if locator is None else locator.split("\\")[-1]
+
+                self.extension = parse_value(file_results, "extension", str)
+                self.releaser = parse_value(file_results, "releaser", str)
+                self.scan_type = parse_value(file_results, "scan_type", str)
+                self.resolution = parse_value(file_results, "scan_size", str)
+                self.dpi = parse_value(file_results, "dpi", str)
+
+                self.filesize = parse_value(file_results, "filesize", int)
+                self.pages = parse_value(file_results, "archive_files_pic_count", int)
+
+                self.time_created = parse_value(
+                    file_results, "file_create_date", datetime.fromisoformat
+                )
+                self.time_added = parse_value(
+                    file_results, "time_added", datetime.fromisoformat
+                )
+                self.time_last_modified = parse_value(
+                    file_results, "time_last_modified", datetime.fromisoformat
+                )
 
     def get(self, key: str) -> Any:
         return list(self.json_obj.values())[0][key]
@@ -70,20 +77,20 @@ class ResultFile:
             return "{ broken: true }"
         else:
             return f"""{{
-    id: "{str(self.id)}",
+    id: "{self.id}",
     comicvine_series_url: "{self.comicvine_series_url}",
 
-    download_link: "{self.download_link}",
-    filename: "{self.filename}",
-    filesize: "{self.filesize}",
-    pages: "{self.pages}",
-    extension: "{self.extension}",
-    releaser: "{self.releaser}",
-    scan_type: "{self.scan_type}",
-    resolution: "{self.resolution}",
-    dpi: "{self.dpi}",
+    download_link: "{self.download_link or ""}",
+    filename: "{self.filename or ""}",
+    filesize: "{self.filesize or ""}",
+    pages: "{self.pages or ""}",
+    extension: "{self.extension or ""}",
+    releaser: "{self.releaser or ""}",
+    scan_type: "{self.scan_type or ""}",
+    resolution: "{self.resolution or ""}",
+    dpi: "{self.dpi or ""}",
 
-    time_created: "{self.time_created}",
-    time_added: "{self.time_added}",
-    time_last_modified: "{self.time_last_modified}",
+    time_created: "{self.time_created or ""}",
+    time_added: "{self.time_added or ""}",
+    time_last_modified: "{self.time_last_modified or ""}",
 }}"""
