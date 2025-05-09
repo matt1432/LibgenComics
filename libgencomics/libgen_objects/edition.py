@@ -1,16 +1,13 @@
-import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 
-from libgencomics.common import attempt_request, parse_value
+from libgencomics.common import parse_value
+
+from .libgen_object import LibgenObject
 
 
 @dataclass
-class Edition:
-    id: int
-    libgen_api_url: str
-    json_obj: Any
+class Edition(LibgenObject):
     comicvine_series_url: str
 
     number: str | None
@@ -27,15 +24,10 @@ class Edition:
     time_last_modified: datetime | None
 
     def __init__(self, id: str, comicvine_url: str):
-        self.comicvine_series_url = comicvine_url
-
-        self.id = int(id)
-        self.libgen_api_url = f"https://libgen.gs/json.php?object=e&ids={self.id}"
-
-        self.json_obj = json.loads(attempt_request(self.libgen_api_url).text)
-
+        super().__init__(id, "https://libgen.gs/json.php?object=e&ids=")
         edition_results = list(self.json_obj.values())[0]
 
+        self.comicvine_series_url = comicvine_url
         self.number = parse_value(edition_results, "issue_total_number", str)
         self.title = parse_value(edition_results, "title", str)
         self.author = parse_value(edition_results, "author", str)
@@ -55,30 +47,21 @@ class Edition:
             edition_results, "time_last_modified", datetime.fromisoformat
         )
 
-    def get(self, key: str) -> Any:
-        return list(self.json_obj.values())[0][key]
-
-    def __json__(self) -> dict[str, str | int]:
-        return {
-            "id": self.id,
-            "comicvine_series_url": self.comicvine_series_url,
-            "number": self.number or "",
-            "title": self.title or "",
-            "author": self.author or "",
-            "publisher": self.publisher or "",
-            "year": self.year or "",
-            "month": self.month or "",
-            "day": self.day or "",
-            "pages": self.pages or "",
-            "cover_url": self.cover_url or "",
-            "time_added": str(self.time_added or ""),
-            "time_last_modified": str(self.time_last_modified or ""),
-        }
-
-    def __str__(self) -> str:
-        return json.dumps(
-            self,
-            sort_keys=True,
-            indent=4,
-            default=lambda o: o.__json__() if hasattr(o, "__json__") else None,
+    def __json__(self) -> dict[str, str | int | None]:
+        return super().__to_json__(
+            [
+                "author",
+                "comicvine_series_url",
+                "cover_url",
+                "day",
+                "id",
+                "month",
+                "number",
+                "pages",
+                "publisher",
+                "time_added",
+                "time_last_modified",
+                "title",
+                "year",
+            ]
         )

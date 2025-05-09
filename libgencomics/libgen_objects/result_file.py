@@ -1,16 +1,13 @@
-import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 
-from libgencomics.common import attempt_request, parse_value
+from libgencomics.common import parse_value
+
+from .libgen_object import LibgenObject
 
 
 @dataclass
-class ResultFile:
-    id: int
-    libgen_api_url: str
-    json_obj: Any
+class ResultFile(LibgenObject):
     comicvine_series_url: str
 
     broken: bool = False
@@ -30,13 +27,10 @@ class ResultFile:
     time_last_modified: datetime | None = None
 
     def __init__(self, id: str, comicvine_url: str):
-        self.comicvine_series_url = comicvine_url
-
-        self.id = int(id)
-        self.libgen_api_url = f"https://libgen.gs/json.php?object=f&ids={self.id}"
-        self.json_obj = json.loads(attempt_request(self.libgen_api_url).text)
-
+        super().__init__(id, "https://libgen.gs/json.php?object=f&ids=")
         file_results = list(self.json_obj.values())[0]
+
+        self.comicvine_series_url = comicvine_url
 
         if "broken" not in file_results or file_results["broken"] != "N":
             self.broken = True
@@ -69,34 +63,28 @@ class ResultFile:
                     file_results, "time_last_modified", datetime.fromisoformat
                 )
 
-    def get(self, key: str) -> Any:
-        return list(self.json_obj.values())[0][key]
-
-    def __json__(self) -> dict[str, str | int]:
-        return {
-            "id": self.id,
-            "comicvine_series_url": self.comicvine_series_url,
-            "download_link": self.download_link or "",
-            "filename": self.filename or "",
-            "filesize": self.filesize or "",
-            "pages": self.pages or "",
-            "extension": self.extension or "",
-            "releaser": self.releaser or "",
-            "scan_type": self.scan_type or "",
-            "resolution": self.resolution or "",
-            "dpi": self.dpi or "",
-            "time_created": str(self.time_created or ""),
-            "time_added": str(self.time_added or ""),
-            "time_last_modified": str(self.time_last_modified or ""),
-        }
+    def __json__(self) -> dict[str, str | int | None]:
+        return super().__to_json__(
+            [
+                "comicvine_series_url",
+                "download_link",
+                "dpi",
+                "extension",
+                "filename",
+                "filesize",
+                "id",
+                "pages",
+                "releaser",
+                "resolution",
+                "scan_type",
+                "time_added",
+                "time_created",
+                "time_last_modified",
+            ]
+        )
 
     def __str__(self) -> str:
         if self.broken:
             return """{ "broken": true }"""
         else:
-            return json.dumps(
-                self,
-                sort_keys=True,
-                indent=4,
-                default=lambda o: o.__json__() if hasattr(o, "__json__") else None,
-            )
+            return super().__str__()
