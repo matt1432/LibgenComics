@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "LibgenComics"
-version = "0.0.1a1"
+version = "0.0.1"
 description = "Search Library genesis by Comicvine volume ID"
 license = "MIT"
 classifiers = [
@@ -12,6 +12,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
   "Programming Language :: Python :: 3"
 ]
+requires-python = ">=3.12"
 dependencies = [
   "beautifulsoup4",
   "requests",

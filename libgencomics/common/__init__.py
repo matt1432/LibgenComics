@@ -5,18 +5,16 @@ from typing import Any, TypeVar
 import requests
 
 
-# TODO: limit to 5 or so attempts
 def attempt_request(url: str) -> requests.Response:
-    while True:
+    for i in range(5):
         try:
             return requests.get(url)
-        except requests.exceptions.ConnectionError as e:
-            print(e)
+        except requests.exceptions.ConnectionError:
             return requests.get(url)
+    return requests.get(url)
 
 
 # attempts to chain attributes, indexes or functions of the root object
-# TODO: improve types
 def opt_chain(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | None:
     result = root
     for k in keys:
