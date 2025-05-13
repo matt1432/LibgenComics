@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from libgencomics.common import attempt_request, opt_chain
-from libgencomics.errors import WrongURLException
+from libgencomics.errors import LibgenSeriesNotFoundException, WrongURLException
 from libgencomics.libgen_objects import Edition, ResultFile, Series
 
 
@@ -82,7 +82,7 @@ class SearchRequest:
 
                 page += 1
                 soup = BeautifulSoup(self.get_search_page(page).text, "html.parser")
-        return None
+        raise LibgenSeriesNotFoundException("No matching series were found.")
 
     def fetch_editions_data(self) -> list[Edition]:
         series = self.get_series()
