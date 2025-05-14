@@ -1,4 +1,5 @@
 from .errors import WrongURLException as WrongURLException
+from .errors import LibgenSeriesNotFoundException as LibgenSeriesNotFoundException
 from .libgen_objects import Edition as Edition
 from .libgen_objects import ResultFile as ResultFile
 from .libgen_objects import Series as Series
