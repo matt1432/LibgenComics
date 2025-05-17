@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 from libgencomics.common import parse_value
 
@@ -11,7 +12,7 @@ from .series import Series
 class Edition(LibgenObject):
     series: Series
 
-    number: str | None
+    number: float | tuple[float, float] | None
     title: str | None
     author: str | None
     publisher: str | None
@@ -24,13 +25,37 @@ class Edition(LibgenObject):
     time_added: datetime | None
     time_last_modified: datetime | None
 
+    def __parse_number(
+        self, edition_results: Any
+    ) -> float | tuple[float, float] | None:
+        issue_str = parse_value(edition_results, "issue_total_number", str)
+
+        if issue_str is not None:
+            issue_str = issue_str.replace(",", ".")
+
+            if issue_str.count("-") != 0:
+                covered_issues = issue_str.split("-")
+
+                if len(covered_issues) == 2:
+                    return (
+                        float(covered_issues[0]),
+                        float(covered_issues[1]),
+                    )
+
+            else:
+                return float(issue_str)
+        return None
+
+        return float(issue_str.replace(",", "."))
+
     def __init__(self, id: str, series: Series):
         super().__init__(id, "https://libgen.gs/json.php?object=e&ids=")
         edition_results = list(self.json_obj.values())[0]
 
         self.series = series
 
-        self.number = parse_value(edition_results, "issue_total_number", str)
+        self.number = self.__parse_number(edition_results)
+
         self.title = parse_value(edition_results, "title", str)
         self.author = parse_value(edition_results, "author", str)
         self.publisher = parse_value(edition_results, "publisher", str)

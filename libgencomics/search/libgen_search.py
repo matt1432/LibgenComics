@@ -11,7 +11,7 @@ class LibgenSearch:
         self,
         api_key: str,
         id: int,
-        issue_number: str | None = None,
+        issue_number: float | tuple[float, float] | None = None,
         libgen_series_url: str | None = None,
     ) -> list[ResultFile]:
         session = Comicvine(api_key=api_key)

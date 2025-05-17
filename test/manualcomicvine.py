@@ -16,7 +16,7 @@ t = LibgenSearch()
 print("\n>>>\tSearching for Comicvine ID: " + str(id))
 
 try:
-    titles = t.search_comicvine_id(api_key, id, "25")
+    titles = t.search_comicvine_id(api_key, id, (13, 14))
     print_results(titles)
 except KeyboardInterrupt:
     print("\nExiting program...")
