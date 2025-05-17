@@ -31,19 +31,21 @@ class Edition(LibgenObject):
         issue_str = parse_value(edition_results, "issue_total_number", str)
 
         if issue_str is not None:
-            issue_str = issue_str.replace(",", ".")
+            try:
+                issue_str = issue_str.replace(",", ".")
 
-            if issue_str.count("-") != 0:
-                covered_issues = issue_str.split("-")
+                if issue_str.count("-") != 0:
+                    covered_issues = issue_str.split("-")
 
-                if len(covered_issues) == 2:
-                    return (
-                        float(covered_issues[0]),
-                        float(covered_issues[1]),
-                    )
-
-            else:
-                return float(issue_str)
+                    if len(covered_issues) == 2:
+                        return (
+                            float(covered_issues[0]),
+                            float(covered_issues[1]),
+                        )
+                else:
+                    return float(issue_str)
+            except:
+                return None
         return None
 
         return float(issue_str.replace(",", "."))
