@@ -44,7 +44,7 @@ class Edition(LibgenObject):
                         )
                 else:
                     return float(issue_str)
-            except:
+            except Exception:
                 return None
         return None
 

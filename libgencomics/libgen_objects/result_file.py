@@ -9,7 +9,7 @@ from .libgen_object import LibgenObject
 
 @dataclass
 class ResultFile(LibgenObject):
-    issue: Edition
+    issue: Edition | None
 
     broken: bool = False
 
@@ -27,7 +27,7 @@ class ResultFile(LibgenObject):
     time_added: datetime | None = None
     time_last_modified: datetime | None = None
 
-    def __init__(self, id: str, issue: Edition):
+    def __init__(self, id: str, issue: Edition | None = None):
         super().__init__(id, "https://libgen.gs/json.php?object=f&ids=")
         file_results = list(self.json_obj.values())[0]
 
