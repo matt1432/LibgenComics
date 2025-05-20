@@ -56,7 +56,7 @@ class SearchRequest:
             if not self.libgen_series_url.startswith(
                 "https://libgen.gs/series.php?id="
             ):
-                raise WrongURLException("Incorrect URL")
+                raise WrongURLException(f"Incorrect URL {self.libgen_series_url}")
             return Series(
                 self.libgen_series_url.replace(
                     "https://libgen.gs/series.php?id=", ""
@@ -82,7 +82,9 @@ class SearchRequest:
 
                 page += 1
                 soup = BeautifulSoup(self.get_search_page(page).text, "html.parser")
-        raise LibgenSeriesNotFoundException("No matching series were found.")
+        raise LibgenSeriesNotFoundException(
+            f"No matching series were found for {self.query}."
+        )
 
     def fetch_editions_data(self) -> list[Edition]:
         series = self.get_series()
