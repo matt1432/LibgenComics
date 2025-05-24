@@ -101,7 +101,10 @@ class SearchRequest:
         return output_data
 
     def fetch_files_data(self, issue: Edition) -> list[ResultFile]:
-        files_results = list(issue.get("files").values())
+        try:
+            files_results = list(issue.get("files").values())
+        except KeyError:
+            return []
 
         output_data = []
 
