@@ -125,8 +125,6 @@
     devShells = perSystem (pkgs: {
       default = pkgs.mkShell {
         packages = with pkgs; [
-          alejandra
-
           (python3Packages.python.withPackages (_ps:
             with python3Packages; [
               beautifulsoup4

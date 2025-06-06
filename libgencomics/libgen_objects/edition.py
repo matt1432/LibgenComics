@@ -48,8 +48,6 @@ class Edition(LibgenObject):
                 return None
         return None
 
-        return float(issue_str.replace(",", "."))
-
     def __init__(self, id: str, series: Series):
         super().__init__(id, "https://libgen.gs/json.php?object=e&ids=")
         edition_results = list(self.json_obj.values())[0]

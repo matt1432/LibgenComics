@@ -1,16 +1,14 @@
-{pkgs, ...}: {
+{
+  lib,
+  pkgs,
+  ...
+}: {
   projectRootFile = "flake.lock";
 
-  programs.mypy = {
-    enable = true;
-    directories."" = {
-      modules = ["libgencomics"];
-      extraPythonPackages = with pkgs.python3Packages; (libgencomics.dependencies
-        ++ [
-          libgencomics
-          types-beautifulsoup4
-          types-requests
-        ]);
+  settings.formatter = {
+    "basedpyright" = {
+      command = lib.getExe pkgs.basedpyright;
+      includes = ["*.py"];
     };
   };
 
