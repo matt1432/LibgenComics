@@ -39,7 +39,7 @@ class ResultFile(LibgenObject):
             md5 = parse_value(file_results, "md5", str)
 
             if md5 is not None:
-                self.download_link = f"https://libgen.gl/get.php?md5={md5}"
+                self.download_link = f"https://libgen.la/get.php?md5={md5}"
 
                 locator = parse_value(file_results, "locator", str)
 
