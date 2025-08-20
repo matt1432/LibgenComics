@@ -26,7 +26,7 @@ class Series(LibgenObject):
 
     def __init__(self, id: str, comicvine_url: str | None = None):
         super().__init__(
-            id, "https://libgen.gs/json.php?object=s&fields=*&addkeys=309,101&ids="
+            id, "https://libgen.la/json.php?object=s&fields=*&addkeys=309,101&ids="
         )
         series_results = {
             "add": {},

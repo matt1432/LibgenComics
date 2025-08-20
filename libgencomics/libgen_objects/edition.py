@@ -49,7 +49,7 @@ class Edition(LibgenObject):
         return None
 
     def __init__(self, id: str, series: Series):
-        super().__init__(id, "https://libgen.gs/json.php?object=e&ids=")
+        super().__init__(id, "https://libgen.la/json.php?object=e&ids=")
         edition_results = list(self.json_obj.values())[0]
 
         self.series = series

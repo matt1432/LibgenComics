@@ -17,7 +17,7 @@ print("\n>>>\tSearching for Comicvine ID: " + str(id))
 
 try:
     titles = t.search_comicvine_id(
-        api_key, id, 34.2, "https://libgen.gs/series.php?id=116815"
+        api_key, id, 34.2, "https://libgen.la/series.php?id=116815"
     )
     print_results(titles)
 except KeyboardInterrupt:

@@ -18,10 +18,10 @@ class SearchRequest:
         query_parsed = "%20".join(self.query.split(" "))
         if page is None:
             search_url = (
-                f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=25"
+                f"https://libgen.la/index.php?req={query_parsed}&curtab=s&res=25"
             )
         else:
-            search_url = f"https://libgen.gs/index.php?req={query_parsed}&curtab=s&res=25&page={page}"
+            search_url = f"https://libgen.la/index.php?req={query_parsed}&curtab=s&res=25&page={page}"
         return attempt_request(search_url)
 
     def aggregate_series_data(self, soup: BeautifulSoup) -> Series | None:
@@ -54,12 +54,12 @@ class SearchRequest:
     def get_series(self) -> Series | None:
         if self.libgen_series_url is not None:
             if not self.libgen_series_url.startswith(
-                "https://libgen.gs/series.php?id="
+                "https://libgen.la/series.php?id="
             ):
                 raise WrongURLException(f"Incorrect URL {self.libgen_series_url}")
             return Series(
                 self.libgen_series_url.replace(
-                    "https://libgen.gs/series.php?id=", ""
+                    "https://libgen.la/series.php?id=", ""
                 ).replace("/", ""),
                 self.comicvine_url,
             )

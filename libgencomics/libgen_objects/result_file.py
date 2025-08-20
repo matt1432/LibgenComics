@@ -28,7 +28,7 @@ class ResultFile(LibgenObject):
     time_last_modified: datetime | None = None
 
     def __init__(self, id: str, issue: Edition | None = None):
-        super().__init__(id, "https://libgen.gs/json.php?object=f&ids=")
+        super().__init__(id, "https://libgen.la/json.php?object=f&ids=")
         file_results = list(self.json_obj.values())[0]
 
         self.issue = issue
