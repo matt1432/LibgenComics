@@ -1,12 +1,12 @@
 from collections.abc import Callable
 from inspect import isfunction
-from typing import Any, TypeVar
+from typing import Any
 
 import requests
 
 
 def attempt_request(url: str) -> requests.Response:
-    for i in range(5):
+    for _ in range(5):
         try:
             return requests.get(url)
         except requests.exceptions.ConnectionError:
@@ -34,10 +34,7 @@ def opt_chain(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | None:
     return result
 
 
-T = TypeVar("T")
-
-
-def parse_value(
+def parse_value[T](
     obj: dict[str, str], key: str, parse_func: Callable[[str], T]
 ) -> T | None:
     try:
