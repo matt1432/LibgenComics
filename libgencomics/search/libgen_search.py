@@ -9,19 +9,22 @@ from .search_request import SearchRequest
 class LibgenSearch:
     def search_comicvine_id(
         self,
+        *,
         api_key: str,
         id: int,
+        libgen_site_url: str,
+        libgen_series_id: int | None,
         issue_number: float | tuple[float, float] | None = None,
-        libgen_series_url: str | None = None,
     ) -> list[ResultFile]:
         session = Comicvine(api_key=api_key)
 
         cv_volume: Volume = session.get_volume(volume_id=id)
 
         series_request = SearchRequest(
-            cv_volume.name,
-            str(cv_volume.site_url),
-            libgen_series_url,
+            query=cv_volume.name,
+            libgen_series_id=libgen_series_id,
+            libgen_site_url=libgen_site_url,
+            comicvine_url=str(cv_volume.site_url),
         )
 
         editions = series_request.fetch_editions_data()

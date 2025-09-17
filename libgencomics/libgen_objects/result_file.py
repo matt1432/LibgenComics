@@ -27,8 +27,9 @@ class ResultFile(LibgenObject):
     time_added: datetime | None = None
     time_last_modified: datetime | None = None
 
-    def __init__(self, id: str, issue: Edition | None = None):
-        super().__init__(id, "https://libgen.la/json.php?object=f&ids=")
+    def __init__(self, *, id: int, libgen_site_url: str, issue: Edition | None = None):
+        super().__init__(id=id, url=f"{libgen_site_url}/json.php?object=f&ids=")
+
         file_results = list(self.json_obj.values())[0]
 
         self.issue = issue
@@ -39,7 +40,7 @@ class ResultFile(LibgenObject):
             md5 = parse_value(file_results, "md5", str)
 
             if md5 is not None:
-                self.download_link = f"https://libgen.la/get.php?md5={md5}"
+                self.download_link = f"{libgen_site_url}/get.php?md5={md5}"
 
                 locator = parse_value(file_results, "locator", str)
 

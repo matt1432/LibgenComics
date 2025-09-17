@@ -24,10 +24,12 @@ class Series(LibgenObject):
     comicvine_url: str | None = None
     language: str | None = None
 
-    def __init__(self, id: str, comicvine_url: str | None = None):
+    def __init__(self, *, id: int, libgen_site_url: str, comicvine_url: str | None):
         super().__init__(
-            id, "https://libgen.la/json.php?object=s&fields=*&addkeys=309,101&ids="
+            id=id,
+            url=f"{libgen_site_url}/json.php?object=s&fields=*&addkeys=309,101&ids=",
         )
+
         series_results = {
             "add": {},
             **list(self.json_obj.values())[0],

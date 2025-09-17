@@ -8,13 +8,13 @@ from libgencomics.common import attempt_request
 @dataclass
 class LibgenObject:
     id: int
-    libgen_api_url: str
+    libgen_item_url: str
     json_obj: Any
 
-    def __init__(self, id: str, url: str):
-        self.id = int(id)
-        self.libgen_api_url = f"{url}{self.id}"
-        self.json_obj = json.loads(attempt_request(self.libgen_api_url).text)
+    def __init__(self, *, id: int, url: str):
+        self.id = id
+        self.libgen_item_url = f"{url}{self.id}"
+        self.json_obj = json.loads(attempt_request(self.libgen_item_url).text)
 
     def get(self, key: str) -> Any:
         return list(self.json_obj.values())[0][key]

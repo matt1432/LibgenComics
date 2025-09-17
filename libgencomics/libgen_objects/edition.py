@@ -48,8 +48,9 @@ class Edition(LibgenObject):
                 return None
         return None
 
-    def __init__(self, id: str, series: Series):
-        super().__init__(id, "https://libgen.la/json.php?object=e&ids=")
+    def __init__(self, *, id: int, libgen_site_url: str, series: Series):
+        super().__init__(id=id, url=f"{libgen_site_url}/json.php?object=e&ids=")
+
         edition_results = list(self.json_obj.values())[0]
 
         self.series = series

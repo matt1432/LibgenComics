@@ -2,26 +2,32 @@ import requests
 from bs4 import BeautifulSoup
 
 from libgencomics.common import attempt_request, opt_chain
-from libgencomics.errors import LibgenSeriesNotFoundException, WrongURLException
+from libgencomics.errors import LibgenSeriesNotFoundException
 from libgencomics.libgen_objects import Edition, ResultFile, Series
 
 
 class SearchRequest:
     def __init__(
-        self, query: str, comicvine_url: str, libgen_series_url: str | None = None
+        self,
+        *,
+        query: str,
+        comicvine_url: str,
+        libgen_site_url: str,
+        libgen_series_id: int | None = None,
     ) -> None:
         self.query = query
         self.comicvine_url = comicvine_url
-        self.libgen_series_url = libgen_series_url
+        self.libgen_site_url = libgen_site_url
+        self.libgen_series_id = libgen_series_id
 
     def get_search_page(self, page: int | None = None) -> requests.Response:
         query_parsed = "%20".join(self.query.split(" "))
         if page is None:
             search_url = (
-                f"https://libgen.la/index.php?req={query_parsed}&curtab=s&res=25"
+                f"{self.libgen_site_url}/index.php?req={query_parsed}&curtab=s&res=25"
             )
         else:
-            search_url = f"https://libgen.la/index.php?req={query_parsed}&curtab=s&res=25&page={page}"
+            search_url = f"{self.libgen_site_url}/index.php?req={query_parsed}&curtab=s&res=25&page={page}"
         return attempt_request(search_url)
 
     def aggregate_series_data(self, soup: BeautifulSoup) -> Series | None:
@@ -44,24 +50,23 @@ class SearchRequest:
             )
 
             if series_temp_url is not None:
-                series_id = series_temp_url.replace("series.php?id=", "").strip()
-                series = Series(series_id)
+                series_id = int(series_temp_url.replace("series.php?id=", "").strip())
+                series = Series(
+                    id=series_id,
+                    libgen_site_url=self.libgen_site_url,
+                    comicvine_url=None,
+                )
 
                 if series.comicvine_url == self.comicvine_url:
                     return series
         return None
 
     def get_series(self) -> Series | None:
-        if self.libgen_series_url is not None:
-            if not self.libgen_series_url.startswith(
-                "https://libgen.la/series.php?id="
-            ):
-                raise WrongURLException(f"Incorrect URL {self.libgen_series_url}")
+        if self.libgen_series_id is not None:
             return Series(
-                self.libgen_series_url.replace(
-                    "https://libgen.la/series.php?id=", ""
-                ).replace("/", ""),
-                self.comicvine_url,
+                id=self.libgen_series_id,
+                comicvine_url=self.comicvine_url,
+                libgen_site_url=self.libgen_site_url,
             )
 
         soup = BeautifulSoup(self.get_search_page().text, "html.parser")
@@ -96,20 +101,26 @@ class SearchRequest:
         edition_ids = list(series.get("editions").keys())
 
         for ed_id in edition_ids:
-            output_data.append(Edition(ed_id, series))
+            output_data.append(
+                Edition(id=ed_id, series=series, libgen_site_url=self.libgen_site_url)
+            )
 
         return output_data
 
     def fetch_files_data(self, issue: Edition) -> list[ResultFile]:
         try:
-            files_results = list(issue.get("files").values())
+            result_files = list(issue.get("files").values())
         except KeyError:
             return []
 
         output_data = []
 
-        for file_result in files_results:
-            file = ResultFile(file_result["f_id"], issue)
+        for result_file in result_files:
+            file = ResultFile(
+                id=result_file["f_id"],
+                issue=issue,
+                libgen_site_url=self.libgen_site_url,
+            )
 
             if not file.broken:
                 output_data.append(file)
