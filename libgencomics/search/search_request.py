@@ -30,6 +30,9 @@ class SearchRequest:
             search_url = f"{self.libgen_site_url}/index.php?req={query_parsed}&curtab=s&res=25&page={page}"
         return attempt_request(search_url)
 
+    def get_search_soup(self, page: int | None = None) -> BeautifulSoup:
+        return BeautifulSoup(self.get_search_page(page).text, "lxml")
+
     def aggregate_series_data(self, soup: BeautifulSoup) -> Series | None:
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
             raise Exception(opt_chain(soup.find_all("center"), 0, "string"))
@@ -69,15 +72,17 @@ class SearchRequest:
                 libgen_site_url=self.libgen_site_url,
             )
 
-        soup = BeautifulSoup(self.get_search_page().text, "html.parser")
+        # Search first page before checking following ones
+        soup = self.get_search_soup()
         series = self.aggregate_series_data(soup)
 
+        # Don't have to check following pages if we found a match
         if series is not None:
             return series
 
         if soup.find(id="paginator_example_top") is not None:
             page = 2
-            soup = BeautifulSoup(self.get_search_page(page).text, "html.parser")
+            soup = self.get_search_soup(page)
 
             while soup.find("tbody") is not None:
                 series = self.aggregate_series_data(soup)
@@ -86,7 +91,8 @@ class SearchRequest:
                     return series
 
                 page += 1
-                soup = BeautifulSoup(self.get_search_page(page).text, "html.parser")
+                soup = self.get_search_soup(page)
+
         raise LibgenSeriesNotFoundException(
             f"No matching series were found for {self.query}."
         )
