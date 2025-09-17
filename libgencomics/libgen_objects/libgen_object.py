@@ -11,10 +11,12 @@ class LibgenObject:
     libgen_item_url: str
     json_obj: Any
 
-    def __init__(self, *, id: int, url: str):
+    def __init__(self, *, id: int, url: str, response: str | None = None):
         self.id = id
         self.libgen_item_url = f"{url}{self.id}"
-        self.json_obj = json.loads(attempt_request(self.libgen_item_url).text)
+        self.json_obj = json.loads(
+            response or attempt_request(self.libgen_item_url).text
+        )
 
     def get(self, key: str) -> Any:
         return list(self.json_obj.values())[0][key]

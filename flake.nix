@@ -84,6 +84,7 @@
             buildPythonPackage,
             # python deps
             beautifulsoup4,
+            grequests,
             requests,
             setuptools,
             simyan,
@@ -101,6 +102,7 @@
               build-system = [setuptools];
               dependencies = [
                 beautifulsoup4
+                grequests
                 requests
                 simyan
               ];
@@ -128,6 +130,7 @@
           (python3Packages.python.withPackages (_ps:
             with python3Packages; [
               beautifulsoup4
+              grequests
               libgencomics
               requests
               simyan

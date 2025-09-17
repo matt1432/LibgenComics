@@ -1,3 +1,5 @@
+import asyncio
+
 from libgencomics import LibgenSearch
 
 with open(".api") as file:
@@ -15,15 +17,20 @@ def print_results(arr):
 t = LibgenSearch()
 print("\n>>>\tSearching for Comicvine ID: " + str(id))
 
-try:
-    titles = t.search_comicvine_id(
-        api_key=api_key,
-        id=id,
-        issue_number=(13, 14),
-        libgen_site_url="https://libgen.la",
-        libgen_series_id=None,
-    )
-    print_results(titles)
-except KeyboardInterrupt:
-    print("\nExiting program...")
-    exit(0)
+
+async def main():
+    try:
+        titles = await t.search_comicvine_id(
+            api_key=api_key,
+            id=id,
+            issue_number=(13, 14),
+            libgen_site_url="https://libgen.la",
+            libgen_series_id=None,
+        )
+        print_results(titles)
+    except KeyboardInterrupt:
+        print("\nExiting program...")
+        exit(0)
+
+
+asyncio.run(main())

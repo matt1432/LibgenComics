@@ -2,9 +2,12 @@ from collections.abc import Callable
 from inspect import isfunction
 from typing import Any
 
+import grequests  # type: ignore # noqa: F401
 import requests
 
 __session = requests.Session()
+
+
 def attempt_request(url: str) -> requests.Response:
     for _ in range(5):
         try:

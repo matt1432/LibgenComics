@@ -1,3 +1,4 @@
+import grequests  # type: ignore
 import requests
 from bs4 import BeautifulSoup
 
@@ -31,7 +32,7 @@ class SearchRequest:
         return attempt_request(search_url)
 
     def get_search_soup(self, page: int | None = None) -> BeautifulSoup:
-        return BeautifulSoup(self.get_search_page(page).text, "lxml")
+        return BeautifulSoup(self.get_search_page(page).text, "html.parser")
 
     def aggregate_series_data(self, soup: BeautifulSoup) -> Series | None:
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
@@ -97,7 +98,7 @@ class SearchRequest:
             f"No matching series were found for {self.query}."
         )
 
-    def fetch_editions_data(self) -> list[Edition]:
+    async def fetch_editions_data(self) -> list[Edition]:
         series = self.get_series()
 
         if series is None or series.comicvine_url is None:
@@ -105,10 +106,19 @@ class SearchRequest:
 
         output_data: list[Edition] = []
         edition_ids = list(series.get("editions").keys())
+        edition_requests = [
+            grequests.get(f"{self.libgen_site_url}/json.php?object=e&ids={ed_id}")
+            for ed_id in edition_ids
+        ]
 
-        for ed_id in edition_ids:
+        for index, response in grequests.imap_enumerated(edition_requests, size=5):
             output_data.append(
-                Edition(id=ed_id, series=series, libgen_site_url=self.libgen_site_url)
+                Edition(
+                    id=edition_ids[index],
+                    series=series,
+                    libgen_site_url=self.libgen_site_url,
+                    response=response.text,
+                )
             )
 
         return output_data

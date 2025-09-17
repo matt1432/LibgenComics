@@ -7,7 +7,7 @@ from .search_request import SearchRequest
 
 
 class LibgenSearch:
-    def search_comicvine_id(
+    async def search_comicvine_id(
         self,
         *,
         api_key: str,
@@ -27,7 +27,7 @@ class LibgenSearch:
             comicvine_url=str(cv_volume.site_url),
         )
 
-        editions = series_request.fetch_editions_data()
+        editions = await series_request.fetch_editions_data()
         filtered_editions: list[Edition] = []
 
         for edition in editions:
