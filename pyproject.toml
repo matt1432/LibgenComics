@@ -12,7 +12,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
   "Programming Language :: Python :: 3"
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
   "beautifulsoup4",
   "requests",
@@ -21,10 +21,10 @@ dependencies = [
 
 [tool.basedpyright]
 typeCheckingMode = "standard"
-pythonVersion = "3.12"
+pythonVersion = "3.13"
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py313"
 line-length = 88
 lint.select = ["E", "F", "I", "U"]
 lint.ignore = ["E501"]
