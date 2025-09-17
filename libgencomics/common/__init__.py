@@ -8,6 +8,11 @@ import requests
 __session = requests.Session()
 
 
+class CONSTANTS:
+    EDITION_REQUEST = "/json.php?object=e&ids="
+    SERIES_REQUEST = "/json.php?object=s&fields=*&addkeys=309,101&ids="
+
+
 def attempt_request(url: str) -> requests.Response:
     for _ in range(5):
         try:
@@ -18,7 +23,10 @@ def attempt_request(url: str) -> requests.Response:
 
 
 # attempts to chain attributes, indexes or functions of the root object
-def opt_chain(root: Any, *keys: str | int | Callable[[Any], Any]) -> Any | None:
+def opt_chain(
+    root: Any,
+    *keys: str | int | Callable[[Any], Any],
+) -> Any | None:
     result = root
     for k in keys:
         if isinstance(result, dict):

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from libgencomics.common import parse_value
+from libgencomics.common import CONSTANTS, parse_value
 
 from .libgen_object import LibgenObject
 from .series import Series
@@ -57,7 +57,7 @@ class Edition(LibgenObject):
         response: str | None = None,
     ):
         super().__init__(
-            id=id, url=f"{libgen_site_url}/json.php?object=e&ids=", response=response
+            id=id, url=libgen_site_url + CONSTANTS.EDITION_REQUEST, response=response
         )
 
         edition_results = list(self.json_obj.values())[0]
@@ -78,10 +78,14 @@ class Edition(LibgenObject):
         self.pages = parse_value(edition_results, "pages", int)
 
         self.time_added = parse_value(
-            edition_results, "time_added", datetime.fromisoformat
+            edition_results,
+            "time_added",
+            datetime.fromisoformat,
         )
         self.time_last_modified = parse_value(
-            edition_results, "time_last_modified", datetime.fromisoformat
+            edition_results,
+            "time_last_modified",
+            datetime.fromisoformat,
         )
 
     def __json__(self) -> dict[str, str | int | None]:

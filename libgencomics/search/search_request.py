@@ -2,7 +2,7 @@ import grequests  # type: ignore
 import requests
 from bs4 import BeautifulSoup
 
-from libgencomics.common import attempt_request, opt_chain
+from libgencomics.common import CONSTANTS, attempt_request, opt_chain
 from libgencomics.errors import LibgenSeriesNotFoundException
 from libgencomics.libgen_objects import Edition, ResultFile, Series
 
@@ -34,7 +34,7 @@ class SearchRequest:
     def get_search_soup(self, page: int | None = None) -> BeautifulSoup:
         return BeautifulSoup(self.get_search_page(page).text, "html.parser")
 
-    def aggregate_series_data(self, soup: BeautifulSoup) -> Series | None:
+    async def aggregate_series_data(self, soup: BeautifulSoup) -> Series | None:
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
             raise Exception(opt_chain(soup.find_all("center"), 0, "string"))
 
@@ -43,6 +43,8 @@ class SearchRequest:
 
         if information_table is None:
             return None
+
+        series_ids: list[int] = []
 
         for row in information_table.find_all("tr"):
             series_temp_url = opt_chain(
@@ -54,18 +56,31 @@ class SearchRequest:
             )
 
             if series_temp_url is not None:
-                series_id = int(series_temp_url.replace("series.php?id=", "").strip())
-                series = Series(
-                    id=series_id,
-                    libgen_site_url=self.libgen_site_url,
-                    comicvine_url=None,
+                series_ids.append(
+                    int(series_temp_url.replace("series.php?id=", "").strip())
                 )
 
-                if series.comicvine_url == self.comicvine_url:
-                    return series
+        series_requests = [
+            grequests.get(
+                self.libgen_site_url + CONSTANTS.SERIES_REQUEST + str(series_id)
+            )
+            for series_id in series_ids
+        ]
+
+        for index, response in grequests.imap_enumerated(series_requests, size=5):
+            series = Series(
+                id=series_ids[index],
+                libgen_site_url=self.libgen_site_url,
+                comicvine_url=None,
+                response=response.text,
+            )
+
+            if series.comicvine_url == self.comicvine_url:
+                return series
+
         return None
 
-    def get_series(self) -> Series | None:
+    async def get_series(self) -> Series | None:
         if self.libgen_series_id is not None:
             return Series(
                 id=self.libgen_series_id,
@@ -75,7 +90,7 @@ class SearchRequest:
 
         # Search first page before checking following ones
         soup = self.get_search_soup()
-        series = self.aggregate_series_data(soup)
+        series = await self.aggregate_series_data(soup)
 
         # Don't have to check following pages if we found a match
         if series is not None:
@@ -86,7 +101,7 @@ class SearchRequest:
             soup = self.get_search_soup(page)
 
             while soup.find("tbody") is not None:
-                series = self.aggregate_series_data(soup)
+                series = await self.aggregate_series_data(soup)
 
                 if series is not None:
                     return series
@@ -99,7 +114,7 @@ class SearchRequest:
         )
 
     async def fetch_editions_data(self) -> list[Edition]:
-        series = self.get_series()
+        series = await self.get_series()
 
         if series is None or series.comicvine_url is None:
             return []
@@ -107,7 +122,7 @@ class SearchRequest:
         output_data: list[Edition] = []
         edition_ids = list(series.get("editions").keys())
         edition_requests = [
-            grequests.get(f"{self.libgen_site_url}/json.php?object=e&ids={ed_id}")
+            grequests.get(self.libgen_site_url + CONSTANTS.EDITION_REQUEST + str(ed_id))
             for ed_id in edition_ids
         ]
 

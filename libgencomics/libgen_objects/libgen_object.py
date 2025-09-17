@@ -11,7 +11,13 @@ class LibgenObject:
     libgen_item_url: str
     json_obj: Any
 
-    def __init__(self, *, id: int, url: str, response: str | None = None):
+    def __init__(
+        self,
+        *,
+        id: int,
+        url: str,
+        response: str | None = None,
+    ):
         self.id = id
         self.libgen_item_url = f"{url}{self.id}"
         self.json_obj = json.loads(

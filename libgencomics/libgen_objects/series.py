@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from libgencomics.common import parse_value
+from libgencomics.common import CONSTANTS, parse_value
 
 from .libgen_object import LibgenObject
 
@@ -24,10 +24,18 @@ class Series(LibgenObject):
     comicvine_url: str | None = None
     language: str | None = None
 
-    def __init__(self, *, id: int, libgen_site_url: str, comicvine_url: str | None):
+    def __init__(
+        self,
+        *,
+        id: int,
+        libgen_site_url: str,
+        comicvine_url: str | None,
+        response: str | None = None,
+    ):
         super().__init__(
             id=id,
-            url=f"{libgen_site_url}/json.php?object=s&fields=*&addkeys=309,101&ids=",
+            url=libgen_site_url + CONSTANTS.SERIES_REQUEST,
+            response=response,
         )
 
         series_results = {

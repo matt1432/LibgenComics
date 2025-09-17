@@ -27,7 +27,13 @@ class ResultFile(LibgenObject):
     time_added: datetime | None = None
     time_last_modified: datetime | None = None
 
-    def __init__(self, *, id: int, libgen_site_url: str, issue: Edition | None = None):
+    def __init__(
+        self,
+        *,
+        id: int,
+        libgen_site_url: str,
+        issue: Edition | None = None,
+    ):
         super().__init__(id=id, url=f"{libgen_site_url}/json.php?object=f&ids=")
 
         file_results = list(self.json_obj.values())[0]
