@@ -4,14 +4,14 @@ from typing import Any
 
 import requests
 
-
+__session = requests.Session()
 def attempt_request(url: str) -> requests.Response:
     for _ in range(5):
         try:
-            return requests.get(url)
+            return __session.get(url)
         except requests.exceptions.ConnectionError:
-            return requests.get(url)
-    return requests.get(url)
+            return __session.get(url)
+    return __session.get(url)
 
 
 # attempts to chain attributes, indexes or functions of the root object
