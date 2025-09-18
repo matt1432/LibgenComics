@@ -1,10 +1,18 @@
-import grequests  # type: ignore
-import requests
+import asyncio
+
+import aiohttp
 from bs4 import BeautifulSoup
+from requests import Response
 
 from libgencomics.common import CONSTANTS, attempt_request, opt_chain
 from libgencomics.errors import LibgenSeriesNotFoundException
 from libgencomics.libgen_objects import Edition, ResultFile, Series
+
+
+async def fetch_data(session: aiohttp.ClientSession, url: str):
+    async with session.get(url) as response:
+        data = await response.text()
+        return data
 
 
 class SearchRequest:
@@ -21,7 +29,7 @@ class SearchRequest:
         self.libgen_site_url = libgen_site_url
         self.libgen_series_id = libgen_series_id
 
-    def get_search_page(self, page: int | None = None) -> requests.Response:
+    def get_search_page(self, page: int | None = None) -> Response:
         query_parsed = "%20".join(self.query.split(" "))
         if page is None:
             search_url = (
@@ -60,23 +68,29 @@ class SearchRequest:
                     int(series_temp_url.replace("series.php?id=", "").strip())
                 )
 
-        series_requests = [
-            grequests.get(
-                self.libgen_site_url + CONSTANTS.SERIES_REQUEST + str(series_id)
-            )
-            for series_id in series_ids
-        ]
-
-        for index, response in grequests.imap_enumerated(series_requests, size=5):
-            series = Series(
-                id=series_ids[index],
-                libgen_site_url=self.libgen_site_url,
-                comicvine_url=None,
-                response=response.text,
+        async with aiohttp.ClientSession() as session:
+            series_requests = await asyncio.gather(
+                *[
+                    fetch_data(
+                        session,
+                        self.libgen_site_url
+                        + CONSTANTS.SERIES_REQUEST
+                        + str(series_id),
+                    )
+                    for series_id in series_ids
+                ]
             )
 
-            if series.comicvine_url == self.comicvine_url:
-                return series
+            for index, response in enumerate(series_requests):
+                series = Series(
+                    id=series_ids[index],
+                    libgen_site_url=self.libgen_site_url,
+                    comicvine_url=None,
+                    response=response,
+                )
+
+                if series.comicvine_url == self.comicvine_url:
+                    return series
 
         return None
 
@@ -121,20 +135,27 @@ class SearchRequest:
 
         output_data: list[Edition] = []
         edition_ids = list(series.get("editions").keys())
-        edition_requests = [
-            grequests.get(self.libgen_site_url + CONSTANTS.EDITION_REQUEST + str(ed_id))
-            for ed_id in edition_ids
-        ]
 
-        for index, response in grequests.imap_enumerated(edition_requests, size=5):
-            output_data.append(
-                Edition(
-                    id=edition_ids[index],
-                    series=series,
-                    libgen_site_url=self.libgen_site_url,
-                    response=response.text,
-                )
+        async with aiohttp.ClientSession() as session:
+            edition_requests = await asyncio.gather(
+                *[
+                    fetch_data(
+                        session,
+                        self.libgen_site_url + CONSTANTS.EDITION_REQUEST + str(ed_id),
+                    )
+                    for ed_id in edition_ids
+                ]
             )
+
+            for index, response in enumerate(edition_requests):
+                output_data.append(
+                    Edition(
+                        id=edition_ids[index],
+                        series=series,
+                        libgen_site_url=self.libgen_site_url,
+                        response=response,
+                    )
+                )
 
         return output_data
 

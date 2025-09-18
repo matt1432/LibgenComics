@@ -83,8 +83,8 @@
             # nix build inputs
             buildPythonPackage,
             # python deps
+            aiohttp,
             beautifulsoup4,
-            grequests,
             requests,
             setuptools,
             simyan,
@@ -101,8 +101,8 @@
 
               build-system = [setuptools];
               dependencies = [
+                aiohttp
                 beautifulsoup4
-                grequests
                 requests
                 simyan
               ];
@@ -129,8 +129,8 @@
         packages = with pkgs; [
           (python3Packages.python.withPackages (_ps:
             with python3Packages; [
+              aiohttp
               beautifulsoup4
-              grequests
               libgencomics
               requests
               simyan
