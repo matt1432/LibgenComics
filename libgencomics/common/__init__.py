@@ -1,7 +1,10 @@
+import resource
+from asyncio import gather
 from collections.abc import Callable
 from inspect import isfunction
 from typing import Any
 
+import aiohttp
 import requests
 
 __session = requests.Session()
@@ -9,6 +12,7 @@ __session = requests.Session()
 
 class CONSTANTS:
     EDITION_REQUEST = "/json.php?object=e&ids="
+    RESULT_FILE_REQUEST = "/json.php?object=f&ids="
     SERIES_REQUEST = "/json.php?object=s&fields=*&addkeys=309,101&ids="
 
 
@@ -19,6 +23,40 @@ def attempt_request(url: str) -> requests.Response:
         except requests.exceptions.ConnectionError:
             return __session.get(url)
     return __session.get(url)
+
+
+async def fetch_data(session: aiohttp.ClientSession, url: str) -> str:
+    async with session.get(url) as response:
+        data = await response.text()
+        response.close()
+        return data
+
+
+async def fetch_multiple_urls(urls: list[str]) -> list[str]:
+    file_limit: int
+    try:
+        file_limit, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
+    except Exception:
+        file_limit = 1024
+
+    async with aiohttp.ClientSession() as session:
+        chunks = [urls[x : x + file_limit] for x in range(0, len(urls), file_limit)]
+
+        final_requests = []
+
+        for chunk in chunks:
+            current_requests = await gather(
+                *[
+                    fetch_data(
+                        session,
+                        url,
+                    )
+                    for url in chunk
+                ]
+            )
+            final_requests += current_requests
+
+        return final_requests
 
 
 # attempts to chain attributes, indexes or functions of the root object

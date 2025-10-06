@@ -28,16 +28,11 @@ class LibgenSearch:
         )
 
         editions = await series_request.fetch_editions_data()
+
         filtered_editions: list[Edition] = []
 
         for edition in editions:
             if issue_number is None or edition.number == issue_number:
                 filtered_editions.append(edition)
 
-        files: list[ResultFile] = []
-
-        for filtered_ed in filtered_editions:
-            for file in series_request.fetch_files_data(filtered_ed):
-                files.append(file)
-
-        return files
+        return await series_request.fetch_files_data(filtered_editions)

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from libgencomics.common import parse_value
+from libgencomics.common import CONSTANTS, parse_value
 
 from .edition import Edition
 from .libgen_object import LibgenObject
@@ -33,8 +33,13 @@ class ResultFile(LibgenObject):
         id: int,
         libgen_site_url: str,
         issue: Edition | None = None,
+        response: str | None = None,
     ):
-        super().__init__(id=id, url=f"{libgen_site_url}/json.php?object=f&ids=")
+        super().__init__(
+            id=id,
+            url=libgen_site_url + CONSTANTS.RESULT_FILE_REQUEST,
+            response=response,
+        )
 
         file_results = list(self.json_obj.values())[0]
 

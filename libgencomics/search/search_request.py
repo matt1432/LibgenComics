@@ -1,18 +1,14 @@
-import asyncio
-
-import aiohttp
 from bs4 import BeautifulSoup
 from requests import Response
 
-from libgencomics.common import CONSTANTS, attempt_request, opt_chain
+from libgencomics.common import (
+    CONSTANTS,
+    attempt_request,
+    fetch_multiple_urls,
+    opt_chain,
+)
 from libgencomics.errors import LibgenSeriesNotFoundException
 from libgencomics.libgen_objects import Edition, ResultFile, Series
-
-
-async def fetch_data(session: aiohttp.ClientSession, url: str):
-    async with session.get(url) as response:
-        data = await response.text()
-        return data
 
 
 class SearchRequest:
@@ -68,29 +64,24 @@ class SearchRequest:
                     int(series_temp_url.replace("series.php?id=", "").strip())
                 )
 
-        async with aiohttp.ClientSession() as session:
-            series_requests = await asyncio.gather(
-                *[
-                    fetch_data(
-                        session,
-                        self.libgen_site_url
-                        + CONSTANTS.SERIES_REQUEST
-                        + str(series_id),
-                    )
-                    for series_id in series_ids
-                ]
+        series_requests = await fetch_multiple_urls(
+            [
+                self.libgen_site_url + CONSTANTS.SERIES_REQUEST + str(series_id)
+                for series_id in series_ids
+            ]
+        )
+
+        for index, response in enumerate(series_requests):
+            # print(f"Series: #{index} {series_ids[index]}")
+            series = Series(
+                id=series_ids[index],
+                libgen_site_url=self.libgen_site_url,
+                comicvine_url=None,
+                response=response,
             )
 
-            for index, response in enumerate(series_requests):
-                series = Series(
-                    id=series_ids[index],
-                    libgen_site_url=self.libgen_site_url,
-                    comicvine_url=None,
-                    response=response,
-                )
-
-                if series.comicvine_url == self.comicvine_url:
-                    return series
+            if series.comicvine_url == self.comicvine_url:
+                return series
 
         return None
 
@@ -136,42 +127,54 @@ class SearchRequest:
         output_data: list[Edition] = []
         edition_ids = list(series.get("editions").keys())
 
-        async with aiohttp.ClientSession() as session:
-            edition_requests = await asyncio.gather(
-                *[
-                    fetch_data(
-                        session,
-                        self.libgen_site_url + CONSTANTS.EDITION_REQUEST + str(ed_id),
-                    )
-                    for ed_id in edition_ids
-                ]
-            )
+        edition_requests = await fetch_multiple_urls(
+            [
+                self.libgen_site_url + CONSTANTS.EDITION_REQUEST + str(ed_id)
+                for ed_id in edition_ids
+            ]
+        )
 
-            for index, response in enumerate(edition_requests):
-                output_data.append(
-                    Edition(
-                        id=edition_ids[index],
-                        series=series,
-                        libgen_site_url=self.libgen_site_url,
-                        response=response,
-                    )
+        for index, response in enumerate(edition_requests):
+            # print(f"Edition: #{index} {edition_ids[index]}")
+            output_data.append(
+                Edition(
+                    id=edition_ids[index],
+                    series=series,
+                    libgen_site_url=self.libgen_site_url,
+                    response=response,
                 )
+            )
 
         return output_data
 
-    def fetch_files_data(self, issue: Edition) -> list[ResultFile]:
-        try:
-            result_files = list(issue.get("files").values())
-        except KeyError:
-            return []
+    async def fetch_files_data(self, issues: list[Edition]) -> list[ResultFile]:
+        result_files_ids: list[tuple[int, Edition]] = []
 
-        output_data = []
+        for issue in issues:
+            try:
+                files = list(issue.get("files").values())
+            except KeyError:
+                files = []
 
-        for result_file in result_files:
+            for result_file in files:
+                result_files_ids.append((int(result_file["f_id"]), issue))
+
+        output_data: list[ResultFile] = []
+
+        file_requests = await fetch_multiple_urls(
+            [
+                self.libgen_site_url + CONSTANTS.RESULT_FILE_REQUEST + str(file_id)
+                for file_id, _ in result_files_ids
+            ]
+        )
+
+        for index, response in enumerate(file_requests):
+            # print(f"ResultFile: #{index} {result_files_ids[index][0]}")
             file = ResultFile(
-                id=result_file["f_id"],
-                issue=issue,
+                id=result_files_ids[index][0],
+                issue=result_files_ids[index][1],
                 libgen_site_url=self.libgen_site_url,
+                response=response,
             )
 
             if not file.broken:
