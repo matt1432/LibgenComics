@@ -1,7 +1,7 @@
 from simyan.comicvine import Comicvine
 from simyan.schemas.volume import Volume
 
-from libgencomics.libgen_objects import Edition, ResultFile
+from libgencomics.libgen_objects import ResultFile
 
 from .search_request import SearchRequest
 
@@ -13,7 +13,7 @@ class LibgenSearch:
         api_key: str,
         id: int,
         libgen_site_url: str,
-        libgen_series_id: int | None,
+        libgen_series_id: int | list[int] | None,
         issue_number: float | tuple[float, float] | None = None,
     ) -> list[ResultFile]:
         session = Comicvine(api_key=api_key)
@@ -29,10 +29,10 @@ class LibgenSearch:
 
         editions = await series_request.fetch_editions_data()
 
-        filtered_editions: list[Edition] = []
-
-        for edition in editions:
-            if issue_number is None or edition.number == issue_number:
-                filtered_editions.append(edition)
+        filtered_editions = (
+            editions
+            if issue_number is None
+            else [edition for edition in editions if edition.number == issue_number]
+        )
 
         return await series_request.fetch_files_data(filtered_editions)

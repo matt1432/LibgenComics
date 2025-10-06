@@ -18,7 +18,7 @@ class SearchRequest:
         query: str,
         comicvine_url: str,
         libgen_site_url: str,
-        libgen_series_id: int | None = None,
+        libgen_series_id: int | list[int] | None = None,
     ) -> None:
         self.query = query
         self.comicvine_url = comicvine_url
@@ -85,13 +85,25 @@ class SearchRequest:
 
         return None
 
-    async def get_series(self) -> Series | None:
+    async def get_series(self) -> list[Series] | None:
         if self.libgen_series_id is not None:
-            return Series(
-                id=self.libgen_series_id,
-                comicvine_url=self.comicvine_url,
-                libgen_site_url=self.libgen_site_url,
-            )
+            if isinstance(self.libgen_series_id, int):
+                return [
+                    Series(
+                        id=self.libgen_series_id,
+                        comicvine_url=self.comicvine_url,
+                        libgen_site_url=self.libgen_site_url,
+                    )
+                ]
+            else:
+                return [
+                    Series(
+                        id=id,
+                        comicvine_url=self.comicvine_url,
+                        libgen_site_url=self.libgen_site_url,
+                    )
+                    for id in self.libgen_series_id
+                ]
 
         # Search first page before checking following ones
         soup = self.get_search_soup()
@@ -99,7 +111,7 @@ class SearchRequest:
 
         # Don't have to check following pages if we found a match
         if series is not None:
-            return series
+            return [series]
 
         if soup.find(id="paginator_example_top") is not None:
             page = 2
@@ -109,7 +121,7 @@ class SearchRequest:
                 series = await self.aggregate_series_data(soup)
 
                 if series is not None:
-                    return series
+                    return [series]
 
                 page += 1
                 soup = self.get_search_soup(page)
@@ -121,16 +133,20 @@ class SearchRequest:
     async def fetch_editions_data(self) -> list[Edition]:
         series = await self.get_series()
 
-        if series is None or series.comicvine_url is None:
+        if series is None:
             return []
 
         output_data: list[Edition] = []
-        edition_ids = list(series.get("editions").keys())
+        edition_ids: list[tuple[int, Series]] = []
+
+        for s in series:
+            for key in list(s.get("editions").keys()):
+                edition_ids.append((int(key), s))
 
         edition_requests = await fetch_multiple_urls(
             [
                 self.libgen_site_url + CONSTANTS.EDITION_REQUEST + str(ed_id)
-                for ed_id in edition_ids
+                for ed_id, _ in edition_ids
             ]
         )
 
@@ -138,8 +154,8 @@ class SearchRequest:
             # print(f"Edition: #{index} {edition_ids[index]}")
             output_data.append(
                 Edition(
-                    id=edition_ids[index],
-                    series=series,
+                    id=edition_ids[index][0],
+                    series=edition_ids[index][1],
                     libgen_site_url=self.libgen_site_url,
                     response=response,
                 )
