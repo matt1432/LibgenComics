@@ -6,6 +6,13 @@ from typing import Any
 
 import aiohttp
 import requests
+from bs4 import BeautifulSoup
+
+from libgencomics.errors import (
+    LibgenMaxUserConnectionsException,
+    LibgenRequestURITooLargeException,
+    LibgenTimeoutException,
+)
 
 __session = requests.Session()
 
@@ -32,6 +39,50 @@ async def fetch_data(session: aiohttp.ClientSession, url: str) -> str:
         return data
 
 
+def check_response_error(response: str) -> str:
+    if (
+        opt_chain(
+            BeautifulSoup(response, "html.parser"),
+            "title",
+            lambda x: x.get_text(),
+        )
+        or ""
+    ).count("Request-URI Too Large") != 0:
+        raise LibgenRequestURITooLargeException()
+    elif (
+        opt_chain(
+            BeautifulSoup(response, "html.parser"),
+            "div",
+            lambda x: x.get_text(),
+        )
+        or ""
+    ).count("max_user_connections") != 0:
+        raise LibgenMaxUserConnectionsException()
+    elif (
+        opt_chain(
+            BeautifulSoup(response, "html.parser"),
+            "title",
+            lambda x: x.get_text(),
+        )
+        or ""
+    ).count("524: A timeout occurred") != 0:
+        raise LibgenTimeoutException()
+
+    return response
+
+
+def is_valid_response(response: str) -> bool:
+    try:
+        check_response_error(response)
+        return True
+    except (
+        LibgenMaxUserConnectionsException,
+        LibgenRequestURITooLargeException,
+        LibgenTimeoutException,
+    ):
+        return False
+
+
 async def fetch_multiple_urls(urls: list[str]) -> list[str]:
     file_limit: int
     try:
@@ -42,7 +93,8 @@ async def fetch_multiple_urls(urls: list[str]) -> list[str]:
     async with aiohttp.ClientSession() as session:
         chunks = [urls[x : x + file_limit] for x in range(0, len(urls), file_limit)]
 
-        final_requests = []
+        to_retry: list[str] = []
+        final_requests: list[str] = []
 
         for chunk in chunks:
             current_requests = await gather(
@@ -54,9 +106,16 @@ async def fetch_multiple_urls(urls: list[str]) -> list[str]:
                     for url in chunk
                 ]
             )
-            final_requests += current_requests
+            for index, req in enumerate(current_requests):
+                if is_valid_response(req):
+                    final_requests.append(req)
+                else:
+                    to_retry.append(chunk[index])
 
-        return final_requests
+    if len(to_retry) != 0:
+        final_requests += await fetch_multiple_urls(to_retry)
+
+    return final_requests
 
 
 # attempts to chain attributes, indexes or functions of the root object

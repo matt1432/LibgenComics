@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from libgencomics.common import attempt_request
+from libgencomics.common import attempt_request, check_response_error
 
 
 @dataclass
@@ -20,9 +20,17 @@ class LibgenObject:
     ):
         self.id = id
         self.libgen_item_url = f"{url}{self.id}"
-        self.json_obj = json.loads(
-            response or attempt_request(self.libgen_item_url).text
+
+        # Checking the passed response is the responsibility of the caller
+        _response = response or check_response_error(
+            attempt_request(self.libgen_item_url).text
         )
+
+        try:
+            self.json_obj = json.loads(_response)
+        except Exception as e:
+            print(_response)
+            raise e
 
     def get(self, key: str) -> Any:
         return list(self.json_obj.values())[0][key]
