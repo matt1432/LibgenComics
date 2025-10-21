@@ -1,6 +1,7 @@
 from enum import StrEnum
+from typing import cast
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from requests import Response
 
 from libgencomics.common import (
@@ -91,27 +92,24 @@ class SearchRequest:
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
             raise Exception(opt_chain(soup.find_all("center"), 0, "string"))
 
-        # Table of data to scrape.
-        information_table = opt_chain(soup.find(id="tablelibgen"), "tbody")
+        navbar = cast(Tag, soup.find("li", {"class": "navbar-right"}))
 
-        if information_table is None:
+        if navbar is None:
             return None
 
-        series_ids: list[int] = []
+        json_link = cast(Tag, navbar.find("a", {"class": "nav-link"}))
 
-        for row in information_table.find_all("tr"):
-            series_temp_url = opt_chain(
-                row,
-                "td",
-                "a",
-                "attrs",
-                "href",
-            )
+        if (json_link is None):
+            return None
 
-            if series_temp_url is not None:
-                series_ids.append(
-                    int(series_temp_url.replace("series.php?id=", "").strip())
-                )
+        raw_series_ids = json_link.attrs["href"]
+
+        if not raw_series_ids:
+            return None
+
+        raw_series_ids = str(raw_series_ids).replace("/json.php?object=s&ids=", "")
+
+        series_ids = raw_series_ids.split(",")
 
         series_requests = await fetch_multiple_urls(
             [
@@ -123,7 +121,7 @@ class SearchRequest:
         for index, response in enumerate(series_requests):
             # print(f"Series: #{index} {series_ids[index]}")
             series = Series(
-                id=series_ids[index],
+                id=int(series_ids[index]),
                 libgen_site_url=self.libgen_site_url,
                 comicvine_url=None,
                 response=response,
@@ -154,26 +152,11 @@ class SearchRequest:
                     for id in self.libgen_series_id
                 ]
 
-        # Search first page before checking following ones
         soup = self.get_search_soup()
         series = await self.aggregate_series_data(soup)
 
-        # Don't have to check following pages if we found a match
         if series is not None:
             return [series]
-
-        if soup.find(id="paginator_example_top") is not None:
-            page = 2
-            soup = self.get_search_soup(page)
-
-            while soup.find("tbody") is not None:
-                series = await self.aggregate_series_data(soup)
-
-                if series is not None:
-                    return [series]
-
-                page += 1
-                soup = self.get_search_soup(page)
 
         raise LibgenSeriesNotFoundException(
             f"No matching series were found for {self.query}."
