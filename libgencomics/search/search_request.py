@@ -1,3 +1,5 @@
+from enum import StrEnum
+
 from bs4 import BeautifulSoup
 from requests import Response
 
@@ -9,6 +11,53 @@ from libgencomics.common import (
 )
 from libgencomics.errors import LibgenSeriesNotFoundException
 from libgencomics.libgen_objects import Edition, ResultFile, Series
+
+
+class Category(StrEnum):
+    FILES = "f"
+    EDITIONS = "e"
+    SERIES = "s"
+    AUTHORS = "a"
+    PUBLISHERS = "p"
+    WORKS = "w"
+
+
+def build_search_url(
+    *,
+    base: str,
+    query: str,
+    category: Category,
+    paging: int = 25,
+    page: int | None = None,
+    show_chapters=False,
+    google_mode=False,
+) -> str:
+    query_parsed = "%20".join(query.split(" "))
+
+    search_url = (
+        f"{base}/index.php?req={query_parsed}"
+        "&topics[]=c"  # Only search in Comics
+        f"&curtab={category}&objects[]={category}"  # Only search in category wanted
+        f"&res={paging}"
+        "&filesuns=all"  # search in both sorted and unsorted files
+        "&columns[]=t"  # Search in Title field
+        "&columns[]=a"  # Search in Author field
+        "&columns[]=s"  # Search in Series field
+        "&columns[]=y"  # Search in Year field
+        "&columns[]=p"  # Search in Publisher field
+        "&columns[]=i"  # Search in ISBN field
+    )
+
+    if page is not None:
+        search_url = search_url + f"&page={page}"
+
+    if show_chapters:
+        search_url = search_url + "&showch=on"
+
+    if google_mode:
+        search_url = search_url + "&gmode=on"
+
+    return search_url
 
 
 class SearchRequest:
@@ -26,13 +75,13 @@ class SearchRequest:
         self.libgen_series_id = libgen_series_id
 
     def get_search_page(self, page: int | None = None) -> Response:
-        query_parsed = "%20".join(self.query.split(" "))
-        if page is None:
-            search_url = (
-                f"{self.libgen_site_url}/index.php?req={query_parsed}&curtab=s&res=25"
-            )
-        else:
-            search_url = f"{self.libgen_site_url}/index.php?req={query_parsed}&curtab=s&res=25&page={page}"
+        search_url = build_search_url(
+            base=self.libgen_site_url,
+            query=self.query,
+            category=Category.SERIES,
+            page=page,
+        )
+
         return attempt_request(search_url)
 
     def get_search_soup(self, page: int | None = None) -> BeautifulSoup:
