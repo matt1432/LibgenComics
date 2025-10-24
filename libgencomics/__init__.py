@@ -4,7 +4,6 @@ from .errors import (
 from .errors import (
     LibgenRequestURITooLargeException as LibgenRequestURITooLargeException,
 )
-from .errors import LibgenSeriesNotFoundException as LibgenSeriesNotFoundException
 from .errors import LibgenTimeoutException as LibgenTimeoutException
 from .libgen_objects import Edition as Edition
 from .libgen_objects import ResultFile as ResultFile

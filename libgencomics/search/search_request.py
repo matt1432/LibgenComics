@@ -10,7 +10,6 @@ from libgencomics.common import (
     fetch_multiple_urls,
     opt_chain,
 )
-from libgencomics.errors import LibgenSeriesNotFoundException
 from libgencomics.libgen_objects import Edition, ResultFile, Series
 
 
@@ -177,11 +176,6 @@ class SearchRequest:
         if series is not None:
             return [series]
 
-        raise LibgenSeriesNotFoundException(
-            f"No matching series were found for {self.query}."
-        )
-
-    # TODO:
     async def get_unsorted_files_ids(self) -> list[str]:
         soup = self.get_search_soup(unsorted=True)
 

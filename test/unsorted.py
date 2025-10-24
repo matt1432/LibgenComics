@@ -5,7 +5,7 @@ from libgencomics import LibgenSearch
 with open(".api") as file:
     api_key = file.read().replace("\n", "")
 
-id = 118545
+id = 132510
 
 
 def print_results(arr):
@@ -23,9 +23,9 @@ async def main():
         titles = await t.search_comicvine_id(
             api_key=api_key,
             id=id,
-            issue_number=3,
+            issue_number=None,
             libgen_site_url="https://libgen.la",
-            libgen_series_id=377565,
+            libgen_series_id=None,
         )
         print_results(titles)
     except KeyboardInterrupt:

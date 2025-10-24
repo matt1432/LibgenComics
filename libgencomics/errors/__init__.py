@@ -1,7 +1,3 @@
-class LibgenSeriesNotFoundException(Exception):
-    pass
-
-
 class LibgenRequestURITooLargeException(Exception):
     pass
 
