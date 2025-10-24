@@ -59,7 +59,12 @@ class ResultFile(LibgenObject):
 
                 self.extension = parse_value(file_results, "extension", str)
                 self.releaser = parse_value(file_results, "releaser", str)
+
                 self.scan_type = parse_value(file_results, "scan_type", str)
+                if not self.scan_type:
+                    if self.filename and self.filename.lower().count("(digital)"):
+                        self.scan_type = "digital"
+
                 self.resolution = parse_value(file_results, "scan_size", str)
                 self.dpi = parse_value(file_results, "dpi", str)
 
