@@ -23,6 +23,12 @@ class Category(StrEnum):
     WORKS = "w"
 
 
+class SearchSorted(StrEnum):
+    ALL = "all"
+    SORTED = "sort"
+    UNSORTED = "unsort"
+
+
 def build_search_url(
     *,
     base: str,
@@ -30,6 +36,7 @@ def build_search_url(
     category: Category,
     paging: int = 25,
     page: int | None = None,
+    sort: SearchSorted = SearchSorted.ALL,
     show_chapters=False,
     google_mode=False,
 ) -> str:
@@ -40,7 +47,7 @@ def build_search_url(
         "&topics[]=c"  # Only search in Comics
         f"&curtab={category}&objects[]={category}"  # Only search in category wanted
         f"&res={paging}"
-        "&filesuns=all"  # search in both sorted and unsorted files
+        f"&filesuns={sort}"
         "&columns[]=t"  # Search in Title field
         "&columns[]=a"  # Search in Author field
         "&columns[]=s"  # Search in Series field
@@ -69,26 +76,38 @@ class SearchRequest:
         comicvine_url: str,
         libgen_site_url: str,
         libgen_series_id: int | list[int] | None = None,
+        issue_number: float | tuple[float, float] | None = None,
     ) -> None:
         self.query = query
         self.comicvine_url = comicvine_url
         self.libgen_site_url = libgen_site_url
         self.libgen_series_id = libgen_series_id
+        self.issue_number = issue_number
 
-    def get_search_page(self, page: int | None = None) -> Response:
-        search_url = build_search_url(
-            base=self.libgen_site_url,
-            query=self.query,
-            category=Category.SERIES,
-            page=page,
-        )
+    def get_search_page(self, unsorted=False) -> Response:
+        if unsorted:
+            search_url = build_search_url(
+                base=self.libgen_site_url,
+                query=f"{self.query} {self.issue_number}"
+                if self.issue_number is not None
+                else self.query,
+                category=Category.FILES,
+                sort=SearchSorted.UNSORTED,
+            )
+        else:
+            search_url = build_search_url(
+                base=self.libgen_site_url,
+                query=self.query,
+                category=Category.SERIES,
+            )
 
         return attempt_request(search_url)
 
-    def get_search_soup(self, page: int | None = None) -> BeautifulSoup:
-        return BeautifulSoup(self.get_search_page(page).text, "html.parser")
+    def get_search_soup(self, unsorted=False) -> BeautifulSoup:
+        return BeautifulSoup(self.get_search_page(unsorted).text, "html.parser")
 
     async def aggregate_series_data(self, soup: BeautifulSoup) -> Series | None:
+        # TODO: make better exception
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
             raise Exception(opt_chain(soup.find_all("center"), 0, "string"))
 
@@ -99,7 +118,7 @@ class SearchRequest:
 
         json_link = cast(Tag, navbar.find("a", {"class": "nav-link"}))
 
-        if (json_link is None):
+        if json_link is None:
             return None
 
         raw_series_ids = json_link.attrs["href"]
@@ -162,6 +181,33 @@ class SearchRequest:
             f"No matching series were found for {self.query}."
         )
 
+    # TODO:
+    async def get_unsorted_files_ids(self) -> list[str]:
+        soup = self.get_search_soup(unsorted=True)
+
+        # TODO: make better exception
+        if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
+            raise Exception(opt_chain(soup.find_all("center"), 0, "string"))
+
+        navbar = cast(Tag, soup.find("li", {"class": "navbar-right"}))
+
+        if navbar is None:
+            return []
+
+        json_link = cast(Tag, navbar.find("a", {"class": "nav-link"}))
+
+        if json_link is None:
+            return []
+
+        raw_files_ids = json_link.attrs["href"]
+
+        if not raw_files_ids:
+            return []
+
+        raw_files_ids = str(raw_files_ids).replace("/json.php?object=f&ids=", "")
+
+        return raw_files_ids.split(",")
+
     async def fetch_editions_data(self) -> list[Edition]:
         series = await self.get_series()
 
@@ -196,7 +242,7 @@ class SearchRequest:
         return output_data
 
     async def fetch_files_data(self, issues: list[Edition]) -> list[ResultFile]:
-        result_files_ids: list[tuple[int, Edition]] = []
+        result_files_ids: list[tuple[str, Edition | None]] = []
 
         for issue in issues:
             try:
@@ -205,13 +251,15 @@ class SearchRequest:
                 files = []
 
             for result_file in files:
-                result_files_ids.append((int(result_file["f_id"]), issue))
+                result_files_ids.append((result_file["f_id"], issue))
+
+        result_files_ids += [(id, None) for id in (await self.get_unsorted_files_ids())]
 
         output_data: list[ResultFile] = []
 
         file_requests = await fetch_multiple_urls(
             [
-                self.libgen_site_url + CONSTANTS.RESULT_FILE_REQUEST + str(file_id)
+                self.libgen_site_url + CONSTANTS.RESULT_FILE_REQUEST + file_id
                 for file_id, _ in result_files_ids
             ]
         )
@@ -219,7 +267,7 @@ class SearchRequest:
         for index, response in enumerate(file_requests):
             # print(f"ResultFile: #{index} {result_files_ids[index][0]}")
             file = ResultFile(
-                id=result_files_ids[index][0],
+                id=int(result_files_ids[index][0]),
                 issue=result_files_ids[index][1],
                 libgen_site_url=self.libgen_site_url,
                 response=response,

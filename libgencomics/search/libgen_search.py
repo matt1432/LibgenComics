@@ -25,6 +25,7 @@ class LibgenSearch:
             libgen_series_id=libgen_series_id,
             libgen_site_url=libgen_site_url,
             comicvine_url=str(cv_volume.site_url),
+            issue_number=issue_number,
         )
 
         editions = await series_request.fetch_editions_data()
