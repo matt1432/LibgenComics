@@ -44,8 +44,10 @@ class Edition(LibgenObject):
                         )
                 else:
                     return float(issue_str)
+
             except Exception:
                 return None
+
         return None
 
     def __init__(
@@ -82,6 +84,7 @@ class Edition(LibgenObject):
             "time_added",
             datetime.fromisoformat,
         )
+
         self.time_last_modified = parse_value(
             edition_results,
             "time_last_modified",

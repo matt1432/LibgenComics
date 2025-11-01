@@ -83,9 +83,11 @@ class ResultFile(LibgenObject):
                 self.time_created = parse_value(
                     file_results, "file_create_date", datetime.fromisoformat
                 )
+
                 self.time_added = parse_value(
                     file_results, "time_added", datetime.fromisoformat
                 )
+
                 self.time_last_modified = parse_value(
                     file_results, "time_last_modified", datetime.fromisoformat
                 )

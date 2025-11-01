@@ -137,7 +137,6 @@ class SearchRequest:
         )
 
         for index, response in enumerate(series_requests):
-            # print(f"Series: #{index} {series_ids[index]}")
             series = Series(
                 id=int(series_ids[index]),
                 libgen_site_url=self.libgen_site_url,
@@ -223,7 +222,6 @@ class SearchRequest:
         )
 
         for index, response in enumerate(edition_requests):
-            # print(f"Edition: #{index} {edition_ids[index]}")
             output_data.append(
                 Edition(
                     id=edition_ids[index][0],
@@ -259,7 +257,6 @@ class SearchRequest:
         )
 
         for index, response in enumerate(file_requests):
-            # print(f"ResultFile: #{index} {result_files_ids[index][0]}")
             file = ResultFile(
                 id=int(result_files_ids[index][0]),
                 issue=result_files_ids[index][1],

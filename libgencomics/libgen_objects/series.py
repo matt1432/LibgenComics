@@ -55,21 +55,25 @@ class Series(LibgenObject):
 
         if "date_start" in series_results and series_results["date_start"] is not None:
             date_start = series_results["date_start"].split("-")
+
             self.year_start = int(date_start[0])
             self.month_start = int(date_start[1])
             self.day_start = int(date_start[2])
 
         if "date_end" in series_results and series_results["date_end"] is not None:
             date_end = series_results["date_end"].split("-")
+
             self.year_end = int(date_end[0])
             self.month_end = int(date_end[1])
             self.day_end = int(date_end[2])
 
         self.title = parse_value(series_results, "title", str)
         self.publisher = parse_value(series_results, "publisher", str)
+
         self.time_added = parse_value(
             series_results, "time_added", datetime.fromisoformat
         )
+
         self.time_last_modified = parse_value(
             series_results, "time_last_modified", datetime.fromisoformat
         )

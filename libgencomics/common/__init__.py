@@ -142,7 +142,9 @@ def opt_chain(
 
 
 def parse_value[T](
-    obj: dict[str, str], key: str, parse_func: Callable[[str], T]
+    obj: dict[str, str],
+    key: str,
+    parse_func: Callable[[str], T],
 ) -> T | None:
     try:
         return parse_func(obj[key])
