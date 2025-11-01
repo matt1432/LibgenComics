@@ -1,6 +1,6 @@
+import re
 from dataclasses import dataclass
 from datetime import datetime
-import re
 
 from libgencomics.common import CONSTANTS, parse_value
 
@@ -62,12 +62,16 @@ class ResultFile(LibgenObject):
                 self.releaser = parse_value(file_results, "releaser", str)
 
                 self.scan_type = parse_value(file_results, "scan_type", str)
-                if not self.scan_type and self.filename and self.filename.lower().count("(digital)"):
+                if (
+                    not self.scan_type
+                    and self.filename
+                    and self.filename.lower().count("(digital)")
+                ):
                     self.scan_type = "digital"
 
                     if not self.releaser:
-                        match = re.search(r'\(([^()]+)\)\.cb.$', self.filename)
-                        if match:
+                        match = re.search(r"\(([^()]+)\)\.cb.$", self.filename)
+                        if match and match.group(1).lower() != "digital":
                             self.releaser = match.group(1)
 
                 self.resolution = parse_value(file_results, "scan_size", str)
