@@ -1,7 +1,6 @@
 from enum import StrEnum
-from typing import cast
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 from requests import Response
 
 from libgencomics.common import (
@@ -114,12 +113,7 @@ class SearchRequest:
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
             raise LibgenNginxException(opt_chain(soup.find_all("center"), 0, "string"))
 
-        navbar = cast(Tag, soup.find("li", {"class": "navbar-right"}))
-
-        if navbar is None:
-            return None
-
-        json_link = cast(Tag, navbar.find("a", {"class": "nav-link"}))
+        json_link = soup.select_one("li.navbar-right a.nav-link")
 
         if json_link is None:
             return None
@@ -185,12 +179,7 @@ class SearchRequest:
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
             raise LibgenNginxException(opt_chain(soup.find_all("center"), 0, "string"))
 
-        navbar = cast(Tag, soup.find("li", {"class": "navbar-right"}))
-
-        if navbar is None:
-            return []
-
-        json_link = cast(Tag, navbar.find("a", {"class": "nav-link"}))
+        json_link = soup.select_one("li.navbar-right a.nav-link")
 
         if json_link is None:
             return []
