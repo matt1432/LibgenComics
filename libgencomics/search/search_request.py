@@ -10,6 +10,7 @@ from libgencomics.common import (
     fetch_multiple_urls,
     opt_chain,
 )
+from libgencomics.errors import LibgenNginxException
 from libgencomics.libgen_objects import Edition, ResultFile, Series
 
 
@@ -85,11 +86,15 @@ class SearchRequest:
 
     def get_search_page(self, unsorted=False) -> Response:
         if unsorted:
+            final_query = (
+                f"{self.query} {self.issue_number}"
+                if self.issue_number is not None
+                else self.query
+            )
+
             search_url = build_search_url(
                 base=self.libgen_site_url,
-                query=f"{self.query} {self.issue_number}"
-                if self.issue_number is not None
-                else self.query,
+                query=final_query,
                 category=Category.FILES,
                 sort=SearchSorted.UNSORTED,
             )
@@ -106,9 +111,8 @@ class SearchRequest:
         return BeautifulSoup(self.get_search_page(unsorted).text, "html.parser")
 
     async def aggregate_series_data(self, soup: BeautifulSoup) -> Series | None:
-        # TODO: make better exception
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
-            raise Exception(opt_chain(soup.find_all("center"), 0, "string"))
+            raise LibgenNginxException(opt_chain(soup.find_all("center"), 0, "string"))
 
         navbar = cast(Tag, soup.find("li", {"class": "navbar-right"}))
 
@@ -178,9 +182,8 @@ class SearchRequest:
     async def get_unsorted_files_ids(self) -> list[str]:
         soup = self.get_search_soup(unsorted=True)
 
-        # TODO: make better exception
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
-            raise Exception(opt_chain(soup.find_all("center"), 0, "string"))
+            raise LibgenNginxException(opt_chain(soup.find_all("center"), 0, "string"))
 
         navbar = cast(Tag, soup.find("li", {"class": "navbar-right"}))
 

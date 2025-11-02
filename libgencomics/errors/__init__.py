@@ -1,8 +1,12 @@
-class LibgenRequestURITooLargeException(Exception):
+class LibgenMaxUserConnectionsException(Exception):
     pass
 
 
-class LibgenMaxUserConnectionsException(Exception):
+class LibgenNginxException(Exception):
+    pass
+
+
+class LibgenRequestURITooLargeException(Exception):
     pass
 
 
