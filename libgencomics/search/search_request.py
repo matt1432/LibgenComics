@@ -76,12 +76,14 @@ class SearchRequest:
         libgen_site_url: str,
         libgen_series_id: int | list[int] | None = None,
         issue_number: float | tuple[float, float] | None = None,
+        search_unsorted: bool = True,
     ) -> None:
         self.query = query
         self.comicvine_url = comicvine_url
         self.libgen_site_url = libgen_site_url
         self.libgen_series_id = libgen_series_id
         self.issue_number = issue_number
+        self.search_unsorted = search_unsorted
 
     def get_search_page(self, unsorted=False) -> Response:
         if unsorted:
@@ -237,7 +239,8 @@ class SearchRequest:
             for result_file in files:
                 result_files_ids.append((result_file["f_id"], issue))
 
-        result_files_ids += [(id, None) for id in (await self.get_unsorted_files_ids())]
+        if self.search_unsorted:
+            result_files_ids += [(id, None) for id in (await self.get_unsorted_files_ids())]
 
         output_data: list[ResultFile] = []
 

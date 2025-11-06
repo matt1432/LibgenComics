@@ -15,6 +15,7 @@ class LibgenSearch:
         libgen_site_url: str,
         libgen_series_id: int | list[int] | None,
         issue_number: float | tuple[float, float] | None = None,
+        search_unsorted: bool = True,
     ) -> list[ResultFile]:
         session = Comicvine(api_key=api_key)
 
@@ -26,6 +27,7 @@ class LibgenSearch:
             libgen_site_url=libgen_site_url,
             comicvine_url=str(cv_volume.site_url),
             issue_number=issue_number,
+            search_unsorted=search_unsorted,
         )
 
         editions = await series_request.fetch_editions_data()
