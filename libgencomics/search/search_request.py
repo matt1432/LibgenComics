@@ -72,6 +72,7 @@ class SearchRequest:
         self,
         *,
         query: str,
+        start_year: int | None,
         comicvine_url: str,
         libgen_site_url: str,
         libgen_series_id: int | list[int] | None = None,
@@ -79,6 +80,7 @@ class SearchRequest:
         search_unsorted: bool = True,
     ) -> None:
         self.query = query
+        self.start_year = start_year
         self.comicvine_url = comicvine_url
         self.libgen_site_url = libgen_site_url
         self.libgen_series_id = libgen_series_id
@@ -111,19 +113,19 @@ class SearchRequest:
     def get_search_soup(self, unsorted=False) -> BeautifulSoup:
         return BeautifulSoup(self.get_search_page(unsorted).text, "html.parser")
 
-    async def aggregate_series_data(self, soup: BeautifulSoup) -> Series | None:
+    async def aggregate_series_data(self, soup: BeautifulSoup) -> list[Series]:
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
             raise LibgenNginxException(opt_chain(soup.find_all("center"), 0, "string"))
 
         json_link = soup.select_one("li.navbar-right a.nav-link")
 
         if json_link is None:
-            return None
+            return []
 
         raw_series_ids = json_link.attrs["href"]
 
         if not raw_series_ids:
-            return None
+            return []
 
         raw_series_ids = str(raw_series_ids).replace("/json.php?object=s&ids=", "")
 
@@ -136,6 +138,8 @@ class SearchRequest:
             ]
         )
 
+        matched_series: list[Series] = []
+
         for index, response in enumerate(series_requests):
             series = Series(
                 id=int(series_ids[index]),
@@ -144,12 +148,16 @@ class SearchRequest:
                 response=response,
             )
 
-            if series.comicvine_url == self.comicvine_url:
-                return series
+            if series.comicvine_url is not None:
+                if series.comicvine_url == self.comicvine_url:
+                    matched_series.append(series)
 
-        return None
+            elif series.year_start == self.start_year:
+                matched_series.append(series)
 
-    async def get_series(self) -> list[Series] | None:
+        return matched_series
+
+    async def get_series(self) -> list[Series]:
         if self.libgen_series_id is not None:
             if isinstance(self.libgen_series_id, int):
                 return [
@@ -170,10 +178,7 @@ class SearchRequest:
                 ]
 
         soup = self.get_search_soup()
-        series = await self.aggregate_series_data(soup)
-
-        if series is not None:
-            return [series]
+        return await self.aggregate_series_data(soup)
 
     async def get_unsorted_files_ids(self) -> list[str]:
         soup = self.get_search_soup(unsorted=True)
@@ -240,7 +245,9 @@ class SearchRequest:
                 result_files_ids.append((result_file["f_id"], issue))
 
         if self.search_unsorted:
-            result_files_ids += [(id, None) for id in (await self.get_unsorted_files_ids())]
+            result_files_ids += [
+                (id, None) for id in (await self.get_unsorted_files_ids())
+            ]
 
         output_data: list[ResultFile] = []
 

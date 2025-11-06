@@ -23,6 +23,7 @@ class LibgenSearch:
 
         series_request = SearchRequest(
             query=cv_volume.name,
+            start_year=cv_volume.start_year,
             libgen_series_id=libgen_series_id,
             libgen_site_url=libgen_site_url,
             comicvine_url=str(cv_volume.site_url),
