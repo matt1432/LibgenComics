@@ -16,13 +16,14 @@ class LibgenSearch:
         libgen_series_id: int | list[int] | None,
         issue_number: float | tuple[float, float] | None = None,
         search_unsorted: bool = True,
+        query: str | None = None,
     ) -> list[ResultFile]:
         session = Comicvine(api_key=api_key)
 
         cv_volume: Volume = session.get_volume(volume_id=id)
 
         series_request = SearchRequest(
-            query=cv_volume.name,
+            query=query or cv_volume.name,
             start_year=cv_volume.start_year,
             libgen_series_id=libgen_series_id,
             libgen_site_url=libgen_site_url,
