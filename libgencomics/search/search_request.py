@@ -127,7 +127,10 @@ class SearchRequest:
         if not raw_series_ids:
             return []
 
-        raw_series_ids = str(raw_series_ids).replace("/json.php?object=s&ids=", "")
+        raw_series_ids = str(raw_series_ids)
+        if raw_series_ids.count("/json.php?object=s&ids=") == 0:
+            return []
+        raw_series_ids = raw_series_ids.replace("/json.php?object=s&ids=", "")
 
         series_ids = raw_series_ids.split(",")
 
