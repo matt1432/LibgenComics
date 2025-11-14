@@ -199,7 +199,10 @@ class SearchRequest:
         if not raw_files_ids:
             return []
 
-        raw_files_ids = str(raw_files_ids).replace("/json.php?object=f&ids=", "")
+        raw_files_ids = str(raw_files_ids)
+        if raw_files_ids.count("/json.php?object=f&ids=") == 0:
+            return []
+        raw_files_ids = raw_files_ids.replace("/json.php?object=f&ids=", "")
 
         return raw_files_ids.split(",")
 
