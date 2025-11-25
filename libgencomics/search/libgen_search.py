@@ -1,4 +1,4 @@
-from simyan.comicvine import Comicvine
+from simyan.comicvine import Comicvine, SQLiteCache
 from simyan.schemas.volume import Volume
 
 from libgencomics.libgen_objects import ResultFile
@@ -17,8 +17,9 @@ class LibgenSearch:
         issue_number: float | tuple[float, float] | None = None,
         search_unsorted: bool = True,
         query: str | None = None,
+        cv_cache: SQLiteCache | None = None,
     ) -> list[ResultFile]:
-        session = Comicvine(api_key=api_key)
+        session = Comicvine(api_key=api_key, cache=cv_cache)
 
         cv_volume: Volume = session.get_volume(volume_id=id)
 
