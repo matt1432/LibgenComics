@@ -6,6 +6,10 @@ class LibgenNginxException(Exception):
     pass
 
 
+class LibgenRateLimitedException(Exception):
+    pass
+
+
 class LibgenRequestURITooLargeException(Exception):
     pass
 

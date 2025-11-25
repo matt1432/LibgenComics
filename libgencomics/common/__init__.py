@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 
 from libgencomics.errors import (
     LibgenMaxUserConnectionsException,
+    LibgenRateLimitedException,
     LibgenRequestURITooLargeException,
     LibgenTimeoutException,
 )
@@ -67,6 +68,15 @@ def check_response_error(response: str) -> str:
         or ""
     ).count("524: A timeout occurred") != 0:
         raise LibgenTimeoutException()
+    elif (
+        opt_chain(
+            BeautifulSoup(response, "html.parser"),
+            lambda x: x.select_one("div#what-happened-section p"),
+            lambda x: x.get_text(),
+        )
+        or ""
+    ).count("Too many requests for") != 0:
+        raise LibgenRateLimitedException
 
     return response
 
