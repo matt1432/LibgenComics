@@ -18,6 +18,7 @@ class LibgenSearch:
         search_unsorted: bool = True,
         query: str | None = None,
         cv_cache: SQLiteCache | None = None,
+        flaresolverr_url: str | None = None,
     ) -> list[ResultFile]:
         session = Comicvine(api_key=api_key, cache=cv_cache)
 
@@ -31,6 +32,7 @@ class LibgenSearch:
             comicvine_url=str(cv_volume.site_url),
             issue_number=issue_number,
             search_unsorted=search_unsorted,
+            flaresolverr_url=flaresolverr_url,
         )
 
         editions = await series_request.fetch_editions_data()

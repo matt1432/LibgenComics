@@ -1,3 +1,4 @@
+import json
 import resource
 from asyncio import gather
 from collections.abc import Callable
@@ -24,16 +25,41 @@ class CONSTANTS:
     SERIES_REQUEST = "/json.php?object=s&fields=*&addkeys=309,101&ids="
 
 
-def attempt_request(url: str) -> requests.Response:
+async def flaresolverr_get(
+    session: aiohttp.ClientSession, url: str, flaresolverr_url: str
+) -> str:
+    data = {
+        "cmd": "request.get",
+        "url": url,
+        "maxTimeout": 60000,  # 60 seconds
+    }
+    response = await session.post(
+        flaresolverr_url,
+        data=json.dumps(data),
+        headers={"Content-Type": "application/json"},
+    )
+    result = await response.json()
+    return (
+        BeautifulSoup(result["solution"]["response"], "html.parser")
+        .select_one("pre")
+        .get_text()  # type: ignore
+    )
+
+
+def attempt_request(url: str) -> str:
     for _ in range(5):
         try:
-            return __session.get(url)
+            return __session.get(url).text
         except requests.exceptions.ConnectionError:
-            return __session.get(url)
-    return __session.get(url)
+            return __session.get(url).text
+    return __session.get(url).text
 
 
-async def fetch_data(session: aiohttp.ClientSession, url: str) -> str:
+async def fetch_data(
+    session: aiohttp.ClientSession, url: str, flaresolverr_url: str | None
+) -> str:
+    if flaresolverr_url is not None:
+        return await flaresolverr_get(session, url, flaresolverr_url)
     async with session.get(url) as response:
         data = await response.text()
         response.close()
@@ -93,7 +119,9 @@ def is_valid_response(response: str) -> bool:
         return False
 
 
-async def fetch_multiple_urls(urls: list[str]) -> list[str]:
+async def fetch_multiple_urls(
+    urls: list[str], flaresolverr_url: str | None
+) -> list[str]:
     file_limit: int
     try:
         file_limit, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
@@ -112,18 +140,29 @@ async def fetch_multiple_urls(urls: list[str]) -> list[str]:
                     fetch_data(
                         session,
                         url,
+                        None,
                     )
                     for url in chunk
                 ]
             )
             for index, req in enumerate(current_requests):
-                if is_valid_response(req):
-                    final_requests.append(req)
-                else:
-                    to_retry.append(chunk[index])
+                try:
+                    if is_valid_response(req):
+                        final_requests.append(req)
+                    else:
+                        to_retry.append(chunk[index])
+                except LibgenRateLimitedException:
+                    if flaresolverr_url:
+                        freq = await fetch_data(session, chunk[index], flaresolverr_url)
+                        if is_valid_response(freq):
+                            final_requests.append(freq)
+                        else:
+                            to_retry.append(chunk[index])
+                    else:
+                        to_retry.append(chunk[index])
 
     if len(to_retry) != 0:
-        final_requests += await fetch_multiple_urls(to_retry)
+        final_requests += await fetch_multiple_urls(to_retry, flaresolverr_url)
 
     return final_requests
 

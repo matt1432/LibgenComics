@@ -1,7 +1,6 @@
 from enum import StrEnum
 
 from bs4 import BeautifulSoup
-from requests import Response
 
 from libgencomics.common import (
     CONSTANTS,
@@ -78,6 +77,7 @@ class SearchRequest:
         libgen_series_id: int | list[int] | None = None,
         issue_number: float | tuple[float, float] | None = None,
         search_unsorted: bool = True,
+        flaresolverr_url: str | None = None,
     ) -> None:
         self.query = query
         self.start_year = start_year
@@ -86,8 +86,9 @@ class SearchRequest:
         self.libgen_series_id = libgen_series_id
         self.issue_number = issue_number
         self.search_unsorted = search_unsorted
+        self.flaresolverr_url = flaresolverr_url
 
-    def get_search_page(self, unsorted=False) -> Response:
+    def get_search_page(self, unsorted=False) -> str:
         if unsorted:
             final_query = (
                 f"{self.query} {self.issue_number}"
@@ -111,7 +112,7 @@ class SearchRequest:
         return attempt_request(search_url)
 
     def get_search_soup(self, unsorted=False) -> BeautifulSoup:
-        return BeautifulSoup(self.get_search_page(unsorted).text, "html.parser")
+        return BeautifulSoup(self.get_search_page(unsorted), "html.parser")
 
     async def aggregate_series_data(self, soup: BeautifulSoup) -> list[Series]:
         if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
@@ -138,7 +139,8 @@ class SearchRequest:
             [
                 self.libgen_site_url + CONSTANTS.SERIES_REQUEST + str(series_id)
                 for series_id in series_ids
-            ]
+            ],
+            self.flaresolverr_url,
         )
 
         matched_series: list[Series] = []
@@ -223,7 +225,8 @@ class SearchRequest:
             [
                 self.libgen_site_url + CONSTANTS.EDITION_REQUEST + str(ed_id)
                 for ed_id, _ in edition_ids
-            ]
+            ],
+            self.flaresolverr_url,
         )
 
         for index, response in enumerate(edition_requests):
@@ -261,7 +264,8 @@ class SearchRequest:
             [
                 self.libgen_site_url + CONSTANTS.RESULT_FILE_REQUEST + file_id
                 for file_id, _ in result_files_ids
-            ]
+            ],
+            self.flaresolverr_url,
         )
 
         for index, response in enumerate(file_requests):

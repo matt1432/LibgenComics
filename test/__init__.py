@@ -17,6 +17,7 @@ def run_test(
     libgen_series_id: int | None,
     issue_number: float | tuple[float, float] | None,
     search_unsorted: bool = True,
+    flaresolverr_url: str | None = None,
 ) -> None:
     print("\n>>>\tSearching for Comicvine ID: " + str(cv_id))
 
@@ -31,6 +32,7 @@ def run_test(
                 libgen_site_url="https://libgen.la",
                 libgen_series_id=libgen_series_id,
                 search_unsorted=search_unsorted,
+                flaresolverr_url=flaresolverr_url,
             )
             print_results(titles)
         except KeyboardInterrupt:

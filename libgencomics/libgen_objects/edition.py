@@ -59,7 +59,9 @@ class Edition(LibgenObject):
         response: str | None = None,
     ):
         super().__init__(
-            id=id, url=libgen_site_url + CONSTANTS.EDITION_REQUEST, response=response
+            id=id,
+            url=libgen_site_url + CONSTANTS.EDITION_REQUEST,
+            response=response,
         )
 
         edition_results = list(self.json_obj.values())[0]
