@@ -1,3 +1,4 @@
+from .errors import LibgenBadGatewayException as LibgenBadGatewayException
 from .errors import (
     LibgenMaxUserConnectionsException as LibgenMaxUserConnectionsException,
 )

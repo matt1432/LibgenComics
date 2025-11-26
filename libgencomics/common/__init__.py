@@ -10,6 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from libgencomics.errors import (
+    LibgenBadGatewayException,
     LibgenMaxUserConnectionsException,
     LibgenRateLimitedException,
     LibgenRequestURITooLargeException,
@@ -67,9 +68,10 @@ async def fetch_data(
 
 
 def check_response_error(response: str) -> str:
+    soup = BeautifulSoup(response, "html.parser")
     if (
         opt_chain(
-            BeautifulSoup(response, "html.parser"),
+            soup,
             "title",
             lambda x: x.get_text(),
         )
@@ -78,7 +80,7 @@ def check_response_error(response: str) -> str:
         raise LibgenRequestURITooLargeException()
     elif (
         opt_chain(
-            BeautifulSoup(response, "html.parser"),
+            soup,
             "div",
             lambda x: x.get_text(),
         )
@@ -87,7 +89,7 @@ def check_response_error(response: str) -> str:
         raise LibgenMaxUserConnectionsException()
     elif (
         opt_chain(
-            BeautifulSoup(response, "html.parser"),
+            soup,
             "title",
             lambda x: x.get_text(),
         )
@@ -96,13 +98,22 @@ def check_response_error(response: str) -> str:
         raise LibgenTimeoutException()
     elif (
         opt_chain(
-            BeautifulSoup(response, "html.parser"),
+            soup,
             lambda x: x.select_one("div#what-happened-section p"),
             lambda x: x.get_text(),
         )
         or ""
     ).count("Too many requests for") != 0:
         raise LibgenRateLimitedException
+    elif (
+        opt_chain(
+            soup,
+            lambda x: x.select_one("div#cf-error-details header h1 span.inline-block"),
+            lambda x: x.get_text(),
+        )
+        or ""
+    ).count("Bad gateway") != 0:
+        raise LibgenBadGatewayException
 
     return response
 
