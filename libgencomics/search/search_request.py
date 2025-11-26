@@ -164,23 +164,27 @@ class SearchRequest:
 
     async def get_series(self) -> list[Series]:
         if self.libgen_series_id is not None:
-            if isinstance(self.libgen_series_id, int):
-                return [
-                    Series(
-                        id=self.libgen_series_id,
-                        comicvine_url=self.comicvine_url,
-                        libgen_site_url=self.libgen_site_url,
-                    )
-                ]
-            else:
-                return [
-                    Series(
-                        id=id,
-                        comicvine_url=self.comicvine_url,
-                        libgen_site_url=self.libgen_site_url,
-                    )
-                    for id in self.libgen_series_id
-                ]
+            series_ids: list[int] = (
+                self.libgen_series_id
+                if isinstance(self.libgen_series_id, list)
+                else [self.libgen_series_id]
+            )
+            series_requests = await fetch_multiple_urls(
+                [
+                    self.libgen_site_url + CONSTANTS.SERIES_REQUEST + str(series_id)
+                    for series_id in series_ids
+                ],
+                self.flaresolverr_url,
+            )
+            return [
+                Series(
+                    id=series_ids[index],
+                    libgen_site_url=self.libgen_site_url,
+                    comicvine_url=self.comicvine_url,
+                    response=response,
+                )
+                for index, response in enumerate(series_requests)
+            ]
 
         soup = self.get_search_soup()
         return await self.aggregate_series_data(soup)
