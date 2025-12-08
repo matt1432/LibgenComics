@@ -11,8 +11,8 @@ from bs4 import BeautifulSoup
 
 from libgencomics.errors import (
     LibgenBadGatewayException,
-    LibgenInternalServerException,
     LibgenMaxUserConnectionsException,
+    LibgenNginxException,
     LibgenRateLimitedException,
     LibgenRequestURITooLargeException,
     LibgenSSLHandshakeFailedException,
@@ -69,23 +69,25 @@ async def fetch_data(
         return data
 
 
-def check_response_error(response: str) -> str:
+def check_response_error(response: str) -> tuple[str, BeautifulSoup]:
     soup = BeautifulSoup(response, "html.parser")
-    title = (opt_chain(
+    title = (
+        opt_chain(
             soup,
             "title",
             lambda x: x.get_text(),
         )
-        or "")
+        or ""
+    )
 
-    if title.count("Request-URI Too Large") != 0:
+    if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
+        raise LibgenNginxException(opt_chain(soup.find_all("center"), 0, "string"))
+    elif title.count("Request-URI Too Large") != 0:
         raise LibgenRequestURITooLargeException()
     elif title.count("524: A timeout occurred") != 0:
         raise LibgenTimeoutException()
     elif title.count("525: SSL handshake failed") != 0:
         raise LibgenSSLHandshakeFailedException
-    elif title.count("500 Internal Server Error") != 0:
-        raise LibgenInternalServerException
     elif (
         opt_chain(
             soup,
@@ -114,7 +116,7 @@ def check_response_error(response: str) -> str:
     ).count("Bad gateway") != 0:
         raise LibgenBadGatewayException
 
-    return response
+    return (response, soup)
 
 
 def is_valid_response(response: str) -> bool:

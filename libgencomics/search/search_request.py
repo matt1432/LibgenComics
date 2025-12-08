@@ -5,10 +5,9 @@ from bs4 import BeautifulSoup
 from libgencomics.common import (
     CONSTANTS,
     attempt_request,
+    check_response_error,
     fetch_multiple_urls,
-    opt_chain,
 )
-from libgencomics.errors import LibgenNginxException
 from libgencomics.libgen_objects import Edition, ResultFile, Series
 
 
@@ -112,12 +111,9 @@ class SearchRequest:
         return attempt_request(search_url)
 
     def get_search_soup(self, unsorted=False) -> BeautifulSoup:
-        return BeautifulSoup(self.get_search_page(unsorted), "html.parser")
+        return check_response_error(self.get_search_page(unsorted))[1]
 
     async def aggregate_series_data(self, soup: BeautifulSoup) -> list[Series]:
-        if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
-            raise LibgenNginxException(opt_chain(soup.find_all("center"), 0, "string"))
-
         json_link = soup.select_one("li.navbar-right a.nav-link")
 
         if json_link is None:
@@ -191,9 +187,6 @@ class SearchRequest:
 
     async def get_unsorted_files_ids(self) -> list[str]:
         soup = self.get_search_soup(unsorted=True)
-
-        if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
-            raise LibgenNginxException(opt_chain(soup.find_all("center"), 0, "string"))
 
         json_link = soup.select_one("li.navbar-right a.nav-link")
 

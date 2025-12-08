@@ -22,8 +22,8 @@ class LibgenObject:
         self.libgen_item_url = f"{url}{self.id}"
 
         # Checking the passed response is the responsibility of the caller
-        _response = response or check_response_error(
-            attempt_request(self.libgen_item_url)
+        _response = (
+            response or check_response_error(attempt_request(self.libgen_item_url))[0]
         )
 
         try:
