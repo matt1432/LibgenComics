@@ -165,7 +165,7 @@ async def fetch_multiple_urls(
                         final_requests.append(req)
                     else:
                         to_retry.append(chunk[index])
-                except (LibgenRateLimitedException, LibgenSSLHandshakeFailedException):
+                except LibgenRateLimitedException:
                     if flaresolverr_url:
                         freq = await fetch_data(session, chunk[index], flaresolverr_url)
                         if is_valid_response(freq):
