@@ -42,11 +42,13 @@ async def flaresolverr_get(
         headers={"Content-Type": "application/json"},
     )
     result = await response.json()
-    return (
-        BeautifulSoup(result["solution"]["response"], "html.parser")
-        .select_one("pre")
-        .get_text()  # type: ignore
-    )
+    real_response = result["solution"]["response"]
+    soup = BeautifulSoup(real_response, "html.parser")
+    json_body = soup.select_one("pre")
+
+    if json_body is not None:
+        return json_body.get_text()
+    return real_response
 
 
 def attempt_request(url: str) -> str:
