@@ -2,6 +2,10 @@ class LibgenBadGatewayException(Exception):
     pass
 
 
+class LibgenInternalServerException(Exception):
+    pass
+
+
 class LibgenMaxUserConnectionsException(Exception):
     pass
 

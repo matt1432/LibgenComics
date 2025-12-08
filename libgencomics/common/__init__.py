@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 
 from libgencomics.errors import (
     LibgenBadGatewayException,
+    LibgenInternalServerException,
     LibgenMaxUserConnectionsException,
     LibgenRateLimitedException,
     LibgenRequestURITooLargeException,
@@ -70,15 +71,21 @@ async def fetch_data(
 
 def check_response_error(response: str) -> str:
     soup = BeautifulSoup(response, "html.parser")
-    if (
-        opt_chain(
+    title = (opt_chain(
             soup,
             "title",
             lambda x: x.get_text(),
         )
-        or ""
-    ).count("Request-URI Too Large") != 0:
+        or "")
+
+    if title.count("Request-URI Too Large") != 0:
         raise LibgenRequestURITooLargeException()
+    elif title.count("524: A timeout occurred") != 0:
+        raise LibgenTimeoutException()
+    elif title.count("525: SSL handshake failed") != 0:
+        raise LibgenSSLHandshakeFailedException
+    elif title.count("500 Internal Server Error") != 0:
+        raise LibgenInternalServerException
     elif (
         opt_chain(
             soup,
@@ -91,30 +98,12 @@ def check_response_error(response: str) -> str:
     elif (
         opt_chain(
             soup,
-            "title",
-            lambda x: x.get_text(),
-        )
-        or ""
-    ).count("524: A timeout occurred") != 0:
-        raise LibgenTimeoutException()
-    elif (
-        opt_chain(
-            soup,
             lambda x: x.select_one("div#what-happened-section p"),
             lambda x: x.get_text(),
         )
         or ""
     ).count("Too many requests for") != 0:
         raise LibgenRateLimitedException
-    elif (
-        opt_chain(
-            soup,
-            "title",
-            lambda x: x.get_text(),
-        )
-        or ""
-    ).count("525: SSL handshake failed") != 0:
-        raise LibgenSSLHandshakeFailedException
     elif (
         opt_chain(
             soup,
