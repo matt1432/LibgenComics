@@ -18,5 +18,9 @@ class LibgenRequestURITooLargeException(Exception):
     pass
 
 
+class LibgenSSLHandshakeFailedException(Exception):
+    pass
+
+
 class LibgenTimeoutException(Exception):
     pass

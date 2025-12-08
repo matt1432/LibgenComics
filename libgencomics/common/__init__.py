@@ -14,6 +14,7 @@ from libgencomics.errors import (
     LibgenMaxUserConnectionsException,
     LibgenRateLimitedException,
     LibgenRequestURITooLargeException,
+    LibgenSSLHandshakeFailedException,
     LibgenTimeoutException,
 )
 
@@ -108,6 +109,15 @@ def check_response_error(response: str) -> str:
     elif (
         opt_chain(
             soup,
+            "title",
+            lambda x: x.get_text(),
+        )
+        or ""
+    ).count("525: SSL handshake failed") != 0:
+        raise LibgenSSLHandshakeFailedException
+    elif (
+        opt_chain(
+            soup,
             lambda x: x.select_one("div#cf-error-details header h1 span.inline-block"),
             lambda x: x.get_text(),
         )
@@ -162,7 +172,7 @@ async def fetch_multiple_urls(
                         final_requests.append(req)
                     else:
                         to_retry.append(chunk[index])
-                except LibgenRateLimitedException:
+                except (LibgenRateLimitedException, LibgenSSLHandshakeFailedException):
                     if flaresolverr_url:
                         freq = await fetch_data(session, chunk[index], flaresolverr_url)
                         if is_valid_response(freq):

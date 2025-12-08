@@ -7,6 +7,9 @@ from .errors import LibgenRateLimitedException as LibgenRateLimitedException
 from .errors import (
     LibgenRequestURITooLargeException as LibgenRequestURITooLargeException,
 )
+from .errors import (
+    LibgenSSLHandshakeFailedException as LibgenSSLHandshakeFailedException,
+)
 from .errors import LibgenTimeoutException as LibgenTimeoutException
 from .libgen_objects import Edition as Edition
 from .libgen_objects import ResultFile as ResultFile
