@@ -1,26 +1,30 @@
-class LibgenBadGatewayException(Exception):
+class LibgenException(Exception):
     pass
 
 
-class LibgenMaxUserConnectionsException(Exception):
+class LibgenBadGatewayException(LibgenException):
     pass
 
 
-class LibgenNginxException(Exception):
+class LibgenMaxUserConnectionsException(LibgenException):
     pass
 
 
-class LibgenRateLimitedException(Exception):
+class LibgenNginxException(LibgenException):
     pass
 
 
-class LibgenRequestURITooLargeException(Exception):
+class LibgenRateLimitedException(LibgenException):
     pass
 
 
-class LibgenSSLHandshakeFailedException(Exception):
+class LibgenRequestURITooLargeException(LibgenException):
     pass
 
 
-class LibgenTimeoutException(Exception):
+class LibgenSSLHandshakeFailedException(LibgenException):
+    pass
+
+
+class LibgenTimeoutException(LibgenException):
     pass
