@@ -19,6 +19,13 @@
       repo = "treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    simyan-src = {
+      type = "github";
+      owner = "Metron-Project";
+      repo = "Simyan";
+      flake = false;
+    };
   };
 
   outputs = {
@@ -26,9 +33,10 @@
     systems,
     nixpkgs,
     treefmt-nix,
+    simyan-src,
     ...
   }: let
-    inherit (builtins) fromTOML readFile substring;
+    inherit (builtins) head match readFile substring;
 
     perSystem = attrs:
       nixpkgs.lib.genAttrs (import systems) (system:
@@ -45,34 +53,29 @@
           simyan = pyFinal.callPackage ({
             # nix build inputs
             buildPythonPackage,
-            fetchFromGitHub,
             # python deps
-            eval-type-backport,
             hatchling,
             pydantic,
-            ratelimit,
+            pyrate-limiter,
             requests,
             ...
           }: let
             pname = "simyan";
-            rev = "92050acb36eace59419a98a86f74c87f55f53034";
-            src = fetchFromGitHub {
-              owner = "Metron-Project";
-              repo = "Simyan";
-              inherit rev;
-              hash = "sha256-DfbjfxSMlxYo4qDJMJ9btr09iU9wHSV8QYRiptsxlXQ=";
-            };
+            tag = head (
+              match ".*__version__ = \"([^\"]+)\".*"
+              (readFile "${simyan-src}/${pname}/__init__.py")
+            );
           in
             buildPythonPackage {
-              inherit pname src;
-              version = "1.4.0+${substring 0 7 rev}";
+              inherit pname;
+              src = simyan-src;
+              version = "${tag}+${substring 0 7 simyan-src.rev}";
               format = "pyproject";
 
               build-system = [hatchling];
               dependencies = [
-                eval-type-backport
                 pydantic
-                ratelimit
+                pyrate-limiter
                 requests
               ];
 

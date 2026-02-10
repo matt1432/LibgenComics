@@ -2,10 +2,10 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1763966396,
-        "narHash": "sha256-6eeL1YPcY1MV3DDStIDIdy/zZCDKgHdkCmsrLJFiZf0=",
+        "lastModified": 1770562336,
+        "narHash": "sha256-ub1gpAONMFsT/GU2hV6ZWJjur8rJ6kKxdm9IlCT0j84=",
         "ref": "nixos-unstable",
-        "rev": "5ae3b07d8d6527c42f17c876e404993199144b6a",
+        "rev": "d6c71932130818840fc8fe9509cf50be8c64634f",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/NixOS/nixpkgs"
@@ -20,8 +20,25 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
+        "simyan-src": "simyan-src",
         "systems": "systems",
         "treefmt-nix": "treefmt-nix"
+      }
+    },
+    "simyan-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1765829217,
+        "narHash": "sha256-Vx0aZ6gwJ0xRPh8rDYFKDbbMG94V5yAbFklKCYzbz4E=",
+        "owner": "Metron-Project",
+        "repo": "Simyan",
+        "rev": "eba1471fe239b5a6cbf8118da00fbd36ef55b256",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Metron-Project",
+        "repo": "Simyan",
+        "type": "github"
       }
     },
     "systems": {
@@ -46,11 +63,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1762938485,
-        "narHash": "sha256-AlEObg0syDl+Spi4LsZIBrjw+snSVU4T8MOeuZJUJjM=",
+        "lastModified": 1770228511,
+        "narHash": "sha256-wQ6NJSuFqAEmIg2VMnLdCnUc0b7vslUohqqGGD+Fyxk=",
         "owner": "numtide",
         "repo": "treefmt-nix",
-        "rev": "5b4ee75aeefd1e2d5a1cc43cf6ba65eba75e83e4",
+        "rev": "337a4fe074be1042a35086f15481d763b8ddc0e7",
         "type": "github"
       },
       "original": {
