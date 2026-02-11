@@ -1,14 +1,9 @@
 import asyncio
 
-from libgencomics import LibgenSearch
+from libgencomics import LibgenSearch, get_annas_archive_download
 
 with open(".api") as file:
     api_key = file.read().replace("\n", "")
-
-
-def print_results(arr):
-    for elem in arr:
-        print(elem)
 
 
 def run_test(
@@ -34,7 +29,16 @@ def run_test(
                 search_unsorted=search_unsorted,
                 flaresolverr_url=flaresolverr_url,
             )
-            print_results(titles)
+            for elem in titles:
+                print(elem)
+                if flaresolverr_url is not None:
+                    print(
+                        await get_annas_archive_download(
+                            elem,
+                            flaresolverr_url,
+                            "https://annas-archive.li",
+                        )
+                    )
         except KeyboardInterrupt:
             print("\nExiting program...")
             exit(0)

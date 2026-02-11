@@ -14,6 +14,7 @@ class ResultFile(LibgenObject):
 
     broken: bool = False
 
+    md5: str | None = None
     download_link: str | None = None
     filename: str | None = None
     filesize: int | None = None
@@ -52,6 +53,7 @@ class ResultFile(LibgenObject):
             md5 = parse_value(file_results, "md5", str)
 
             if md5 is not None:
+                self.md5 = md5
                 self.download_link = f"{libgen_site_url}/get.php?md5={md5}"
 
                 locator = parse_value(file_results, "locator", str)
@@ -95,6 +97,7 @@ class ResultFile(LibgenObject):
     def __json__(self) -> dict[str, str | int | None]:
         return super().__to_json__(
             [
+                "md5",
                 "download_link",
                 "dpi",
                 "extension",

@@ -1,9 +1,33 @@
+from aiohttp import ClientSession
+from bs4 import BeautifulSoup
 from simyan.comicvine import Comicvine, SQLiteCache
 from simyan.schemas.volume import Volume
 
+from libgencomics.common import flaresolverr_get
 from libgencomics.libgen_objects import ResultFile
 
 from .search_request import SearchRequest
+
+
+async def get_annas_archive_download(
+    rf: ResultFile,
+    flaresolverr_url: str,
+    annas_archive_site_url: str,
+    n_dl_partner: int = 4,
+) -> str | None:
+    if rf.md5 is None:
+        return None
+
+    async with ClientSession() as session:
+        url = f"{annas_archive_site_url}/slow_download/{rf.md5}/0/{n_dl_partner}"
+        anna_response = await flaresolverr_get(session, url, flaresolverr_url)
+
+    anna_soup = BeautifulSoup(anna_response, "html.parser")
+    for a_elem in anna_soup.select("p.mb-4 > a"):
+        if a_elem.text.count("Download with short filename") != 0:
+            return str(a_elem.attrs["href"])
+
+    return None
 
 
 class LibgenSearch:

@@ -17,3 +17,4 @@ from .libgen_objects import ResultFile as ResultFile
 from .libgen_objects import Series as Series
 from .search import LibgenSearch as LibgenSearch
 from .search import SearchRequest as SearchRequest
+from .search import get_annas_archive_download as get_annas_archive_download
