@@ -23,7 +23,10 @@ class LibgenObject:
 
         # Checking the passed response is the responsibility of the caller
         _response = (
-            response or check_response_error(attempt_request(self.libgen_item_url))[0]
+            response
+            or check_response_error(
+                self.libgen_item_url, attempt_request(self.libgen_item_url)
+            )[0]
         )
 
         try:

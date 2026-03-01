@@ -71,7 +71,7 @@ async def fetch_data(
         return data
 
 
-def check_response_error(response: str) -> tuple[str, BeautifulSoup]:
+def check_response_error(url: str, response: str) -> tuple[str, BeautifulSoup]:
     soup = BeautifulSoup(response, "html.parser")
     title = (
         opt_chain(
@@ -83,13 +83,15 @@ def check_response_error(response: str) -> tuple[str, BeautifulSoup]:
     )
 
     if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
-        raise LibgenNginxException(opt_chain(soup.find_all("center"), 0, "string"))
+        raise LibgenNginxException(
+            (opt_chain(soup.find_all("center"), 0, "string") or "") + "\n" + url
+        )
     elif title.count("Request-URI Too Large") != 0:
-        raise LibgenRequestURITooLargeException()
+        raise LibgenRequestURITooLargeException(url)
     elif title.count("524: A timeout occurred") != 0:
-        raise LibgenTimeoutException()
+        raise LibgenTimeoutException(url)
     elif title.count("525: SSL handshake failed") != 0:
-        raise LibgenSSLHandshakeFailedException
+        raise LibgenSSLHandshakeFailedException(url)
     elif (
         opt_chain(
             soup,
@@ -98,7 +100,7 @@ def check_response_error(response: str) -> tuple[str, BeautifulSoup]:
         )
         or ""
     ).count("max_user_connections") != 0:
-        raise LibgenMaxUserConnectionsException()
+        raise LibgenMaxUserConnectionsException(url)
     elif (
         opt_chain(
             soup,
@@ -107,7 +109,7 @@ def check_response_error(response: str) -> tuple[str, BeautifulSoup]:
         )
         or ""
     ).count("Too many requests for") != 0:
-        raise LibgenRateLimitedException
+        raise LibgenRateLimitedException(url)
     elif (
         opt_chain(
             soup,
@@ -116,14 +118,14 @@ def check_response_error(response: str) -> tuple[str, BeautifulSoup]:
         )
         or ""
     ).count("Bad gateway") != 0:
-        raise LibgenBadGatewayException
+        raise LibgenBadGatewayException(url)
 
     return (response, soup)
 
 
-def is_valid_response(response: str) -> bool:
+def is_valid_response(url: str, response: str) -> bool:
     try:
-        check_response_error(response)
+        check_response_error(url, response)
         return True
     except (
         LibgenMaxUserConnectionsException,
@@ -161,14 +163,14 @@ async def fetch_multiple_urls(
             )
             for index, req in enumerate(current_requests):
                 try:
-                    if is_valid_response(req):
+                    if is_valid_response(chunk[index], req):
                         final_requests.append(req)
                     else:
                         to_retry.append(chunk[index])
                 except LibgenRateLimitedException:
                     if flaresolverr_url:
                         freq = await fetch_data(session, chunk[index], flaresolverr_url)
-                        if is_valid_response(freq):
+                        if is_valid_response(chunk[index], freq):
                             final_requests.append(freq)
                         else:
                             to_retry.append(chunk[index])

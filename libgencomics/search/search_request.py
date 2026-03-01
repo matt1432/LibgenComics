@@ -87,7 +87,7 @@ class SearchRequest:
         self.search_unsorted = search_unsorted
         self.flaresolverr_url = flaresolverr_url
 
-    def get_search_page(self, unsorted=False) -> str:
+    def get_search_page(self, unsorted=False) -> tuple[str, str]:
         if unsorted:
             final_query = (
                 f"{self.query} {self.issue_number}"
@@ -108,10 +108,11 @@ class SearchRequest:
                 category=Category.SERIES,
             )
 
-        return attempt_request(search_url)
+        return search_url, attempt_request(search_url)
 
     def get_search_soup(self, unsorted=False) -> BeautifulSoup:
-        return check_response_error(self.get_search_page(unsorted))[1]
+        url, response = self.get_search_page(unsorted)
+        return check_response_error(url, response)[1]
 
     async def aggregate_series_data(self, soup: BeautifulSoup) -> list[Series]:
         json_link = soup.select_one("li.navbar-right a.nav-link")
