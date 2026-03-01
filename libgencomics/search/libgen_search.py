@@ -10,16 +10,16 @@ from .search_request import SearchRequest
 
 
 async def get_annas_archive_download(
-    rf: ResultFile,
+    md5: str | None,
     flaresolverr_url: str,
     annas_archive_site_url: str,
     n_dl_partner: int = 4,
 ) -> str | None:
-    if rf.md5 is None:
+    if md5 is None:
         return None
 
     async with ClientSession() as session:
-        url = f"{annas_archive_site_url}/slow_download/{rf.md5}/0/{n_dl_partner}"
+        url = f"{annas_archive_site_url}/slow_download/{md5}/0/{n_dl_partner}"
         anna_response = await flaresolverr_get(session, url, flaresolverr_url)
 
     anna_soup = BeautifulSoup(anna_response, "html.parser")
