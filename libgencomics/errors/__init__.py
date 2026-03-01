@@ -14,6 +14,10 @@ class LibgenNginxException(LibgenException):
     pass
 
 
+class LibgenNginxRateLimitedException(LibgenException):
+    pass
+
+
 class LibgenRateLimitedException(LibgenException):
     pass
 

@@ -13,6 +13,7 @@ from libgencomics.errors import (
     LibgenBadGatewayException,
     LibgenMaxUserConnectionsException,
     LibgenNginxException,
+    LibgenNginxRateLimitedException,
     LibgenRateLimitedException,
     LibgenRequestURITooLargeException,
     LibgenSSLHandshakeFailedException,
@@ -83,9 +84,10 @@ def check_response_error(url: str, response: str) -> tuple[str, BeautifulSoup]:
     )
 
     if opt_chain(soup.find_all("center"), 1, "string") == "nginx":
-        raise LibgenNginxException(
-            (opt_chain(soup.find_all("center"), 0, "string") or "") + "\n" + url
-        )
+        text = opt_chain(soup.find_all("center"), 0, "string") or ""
+        if text.startswith("503 Service Temporarily Unavailable"):
+            raise LibgenNginxRateLimitedException(url)
+        raise LibgenNginxException(text + "\n" + url)
     elif title.count("Request-URI Too Large") != 0:
         raise LibgenRequestURITooLargeException(url)
     elif title.count("524: A timeout occurred") != 0:
@@ -167,6 +169,8 @@ async def fetch_multiple_urls(
                         final_requests.append(req)
                     else:
                         to_retry.append(chunk[index])
+                except LibgenNginxRateLimitedException:
+                    to_retry.append(chunk[index])
                 except LibgenRateLimitedException:
                     if flaresolverr_url:
                         freq = await fetch_data(session, chunk[index], flaresolverr_url)
@@ -178,6 +182,7 @@ async def fetch_multiple_urls(
                         to_retry.append(chunk[index])
 
     if len(to_retry) != 0:
+        # print(f"retrying {len(to_retry)}")
         final_requests += await fetch_multiple_urls(to_retry, flaresolverr_url)
 
     return final_requests

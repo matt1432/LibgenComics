@@ -4,6 +4,7 @@ from .errors import (
     LibgenMaxUserConnectionsException as LibgenMaxUserConnectionsException,
 )
 from .errors import LibgenNginxException as LibgenNginxException
+from .errors import LibgenNginxRateLimitedException as LibgenNginxRateLimitedException
 from .errors import LibgenRateLimitedException as LibgenRateLimitedException
 from .errors import (
     LibgenRequestURITooLargeException as LibgenRequestURITooLargeException,
