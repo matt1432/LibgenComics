@@ -34,7 +34,7 @@ def run_test(
                 if flaresolverr_url is not None:
                     print(
                         await get_annas_archive_download(
-                            elem,
+                            elem.md5,
                             flaresolverr_url,
                             "https://annas-archive.li",
                         )

@@ -55,6 +55,7 @@
             buildPythonPackage,
             # python deps
             hatchling,
+            httpx,
             pydantic,
             pyrate-limiter,
             requests,
@@ -74,6 +75,7 @@
 
               build-system = [hatchling];
               dependencies = [
+                httpx
                 pydantic
                 pyrate-limiter
                 requests
