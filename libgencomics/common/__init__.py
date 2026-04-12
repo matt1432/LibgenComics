@@ -1,6 +1,6 @@
 import json
 import resource
-from asyncio import gather
+from asyncio import gather, sleep
 from collections.abc import Callable
 from inspect import isfunction
 from typing import Any
@@ -180,6 +180,7 @@ async def fetch_multiple_urls(
 
     if len(to_retry) != 0:
         # print(f"retrying {len(to_retry)}")
+        await sleep(60)
         final_requests += await fetch_multiple_urls(to_retry, flaresolverr_url)
 
     return final_requests
