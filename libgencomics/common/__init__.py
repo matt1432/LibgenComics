@@ -94,14 +94,11 @@ def check_response_error(url: str, response: str) -> tuple[str, BeautifulSoup]:
         raise LibgenTimeoutException(url)
     elif title.count("525: SSL handshake failed") != 0:
         raise LibgenSSLHandshakeFailedException(url)
-    elif (
-        opt_chain(
-            soup,
-            "div",
-            lambda x: x.get_text(),
-        )
-        or ""
-    ).count("max_user_connections") != 0:
+    elif (opt_chain(soup, "div", lambda x: x.get_text()) or "").count(
+        "max_user_connections"
+    ) != 0 or (opt_chain(soup, "div", lambda x: x.get_text()) or "").count(
+        "Could not connect to the database"
+    ) != 0:
         raise LibgenMaxUserConnectionsException(url)
     elif (
         opt_chain(
