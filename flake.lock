@@ -2,10 +2,10 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1772963539,
-        "narHash": "sha256-9jVDGZnvCckTGdYT53d/EfznygLskyLQXYwJLKMPsZs=",
+        "lastModified": 1775710090,
+        "narHash": "sha256-ar3rofg+awPB8QXDaFJhJ2jJhu+KqN/PRCXeyuXR76E=",
         "ref": "nixos-unstable",
-        "rev": "9dcb002ca1690658be4a04645215baea8b95f31d",
+        "rev": "4c1018dae018162ec878d42fec712642d214fdfa",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/NixOS/nixpkgs"
@@ -28,11 +28,11 @@
     "simyan-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1772826963,
-        "narHash": "sha256-Q5Wrb/Ln4qnne/B+dU17o2b8D1v4b7w4zUQHevCjXGE=",
+        "lastModified": 1773698123,
+        "narHash": "sha256-aOoAJuIsRSWAJYXKzRLGlHSNE7+F53ldKGXBGwJxVRU=",
         "owner": "Metron-Project",
         "repo": "Simyan",
-        "rev": "786e753695ca3abdefcea3ad030b4b0130438592",
+        "rev": "0dccb1d9a63b922192b5f7fdd44e54368625fef4",
         "type": "github"
       },
       "original": {
@@ -63,11 +63,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1772660329,
-        "narHash": "sha256-IjU1FxYqm+VDe5qIOxoW+pISBlGvVApRjiw/Y/ttJzY=",
+        "lastModified": 1775636079,
+        "narHash": "sha256-pc20NRoMdiar8oPQceQT47UUZMBTiMdUuWrYu2obUP0=",
         "owner": "numtide",
         "repo": "treefmt-nix",
-        "rev": "3710e0e1218041bbad640352a0440114b1e10428",
+        "rev": "790751ff7fd3801feeaf96d7dc416a8d581265ba",
         "type": "github"
       },
       "original": {
