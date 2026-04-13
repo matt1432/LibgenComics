@@ -1,34 +1,37 @@
 class LibgenException(Exception):
-    pass
+    name = "LibgenException"
+
+    def __init__(self, url: str | None) -> None:
+        super().__init__(f"{self.name}: {url}")
 
 
 class LibgenBadGatewayException(LibgenException):
-    pass
+    name = "LibgenBadGatewayException"
 
 
 class LibgenMaxUserConnectionsException(LibgenException):
-    pass
+    name = "LibgenMaxUserConnectionsException"
 
 
 class LibgenNginxException(LibgenException):
-    pass
+    name = "LibgenNginxException"
 
 
 class LibgenNginxRateLimitedException(LibgenException):
-    pass
+    name = "LibgenNginxRateLimitedException"
 
 
 class LibgenRateLimitedException(LibgenException):
-    pass
+    name = "LibgenRateLimitedException"
 
 
 class LibgenRequestURITooLargeException(LibgenException):
-    pass
+    name = "LibgenRequestURITooLargeException"
 
 
 class LibgenSSLHandshakeFailedException(LibgenException):
-    pass
+    name = "LibgenSSLHandshakeFailedException"
 
 
 class LibgenTimeoutException(LibgenException):
-    pass
+    name = "LibgenTimeoutException"
