@@ -135,13 +135,17 @@ def is_valid_response(url: str, response: str) -> bool:
 
 
 async def fetch_multiple_urls(
-    urls: list[str], flaresolverr_url: str | None
+    urls: list[str],
+    flaresolverr_url: str | None,
+    _file_limit: int | None = None,
 ) -> list[str]:
-    file_limit: int
-    try:
-        file_limit, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
-    except Exception:
-        file_limit = 1024
+    if _file_limit is not None:
+        file_limit = _file_limit
+    else:
+        try:
+            file_limit, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
+        except Exception:
+            file_limit = 1024
 
     async with aiohttp.ClientSession() as session:
         chunks = [urls[x : x + file_limit] for x in range(0, len(urls), file_limit)]
@@ -179,9 +183,12 @@ async def fetch_multiple_urls(
                         to_retry.append(chunk[index])
 
     if len(to_retry) != 0:
-        # print(f"retrying {len(to_retry)}")
-        await sleep(60)
-        final_requests += await fetch_multiple_urls(to_retry, flaresolverr_url)
+        await sleep(5)
+        new_file_limit = int(file_limit / 2)
+        new_file_limit = new_file_limit if new_file_limit >= 1 else file_limit
+        final_requests += await fetch_multiple_urls(
+            to_retry, flaresolverr_url, new_file_limit
+        )
 
     return final_requests
 
