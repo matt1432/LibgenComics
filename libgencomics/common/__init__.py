@@ -30,7 +30,9 @@ class CONSTANTS:
 
 
 async def flaresolverr_get(
-    session: aiohttp.ClientSession, url: str, flaresolverr_url: str
+    session: aiohttp.ClientSession,
+    url: str,
+    flaresolverr_url: str,
 ) -> str:
     data = {
         "cmd": "request.get",
@@ -62,7 +64,9 @@ def attempt_request(url: str) -> str:
 
 
 async def fetch_data(
-    session: aiohttp.ClientSession, url: str, flaresolverr_url: str | None
+    session: aiohttp.ClientSession,
+    url: str,
+    flaresolverr_url: str | None,
 ) -> str:
     if flaresolverr_url is not None:
         return await flaresolverr_get(session, url, flaresolverr_url)
