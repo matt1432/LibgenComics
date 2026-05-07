@@ -17,7 +17,7 @@ dependencies = [
   "aiohttp",
   "beautifulsoup4",
   "requests",
-  "simyan"
+  "simyan ~= 2.0.0"
 ]
 
 [tool.basedpyright]

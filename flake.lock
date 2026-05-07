@@ -28,16 +28,15 @@
     "simyan-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1759876554,
-        "narHash": "sha256-FkOrC9yks/ltNugZLLbueFHBEXofDV4/4maZqj9y9pg=",
+        "lastModified": 1777935968,
+        "narHash": "sha256-XRk+3R7MXnLeL90ZQm3qh5BdLi1mVnTPNGyQmYBJvww=",
         "owner": "Metron-Project",
         "repo": "Simyan",
-        "rev": "59ad0da681a0f89964ce13475367081640c7a3b7",
+        "rev": "716f538b3dde18d9c88799b9bf2c566c4168fb96",
         "type": "github"
       },
       "original": {
         "owner": "Metron-Project",
-        "ref": "1.6.0",
         "repo": "Simyan",
         "type": "github"
       }
