@@ -70,10 +70,13 @@ async def fetch_data(
 ) -> str:
     if flaresolverr_url is not None:
         return await flaresolverr_get(session, url, flaresolverr_url)
-    async with session.get(url) as response:
-        data = await response.text()
-        response.close()
-        return data
+    try:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as response:
+            data = await response.text()
+            response.close()
+            return data
+    except TimeoutError:
+        return await fetch_data(session, url, flaresolverr_url)
 
 
 def check_response_error(url: str, response: str) -> tuple[str, BeautifulSoup]:
