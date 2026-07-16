@@ -25,6 +25,9 @@
       owner = "Metron-Project";
       repo = "Simyan";
       flake = false;
+
+      # TODO: update to v3
+      rev = "716f538b3dde18d9c88799b9bf2c566c4168fb96";
     };
   };
 
@@ -64,28 +67,7 @@
           build-system = with python3Packages; [hatchling];
           dependencies = with python3Packages; [
             httpx
-            ((pydantic.override (o: {
-                pydantic-core = o.pydantic-core.overridePythonAttrs rec {
-                  version = "2.46.0";
-                  src = final.fetchPypi {
-                    pname = "pydantic_core";
-                    inherit version;
-                    hash = "sha256-gtJJjJa+R7R+kD4TeNHQ93AJfsVuqVMyLzmTanzzSXc=";
-                  };
-
-                  cargoDeps = final.rustPlatform.fetchCargoVendor {
-                    inherit pname version src;
-                    hash = "sha256-jh3omP+gMI3QxISa0AdDq9R7U0Q1m9Ya2mWdJAIVqvs=";
-                  };
-                };
-              })).overridePythonAttrs rec {
-                version = "2.13.0";
-                src = final.fetchPypi {
-                  pname = "pydantic";
-                  inherit version;
-                  hash = "sha256-uJtXW25nDr9udEjAG0GyRPRx7dJ2zQtv4C5+esoyAHA=";
-                };
-              })
+            pydantic
             pyrate-limiter
             requests
           ];
