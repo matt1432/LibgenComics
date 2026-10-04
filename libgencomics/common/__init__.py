@@ -20,7 +20,13 @@ from libgencomics.errors import (
     LibgenTimeoutException,
 )
 
+# Libgen serves the default nginx page to non-browser user agents
+USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0"
+)
+
 __session = requests.Session()
+__session.headers.update({"User-Agent": USER_AGENT})
 
 
 class CONSTANTS:
@@ -154,7 +160,7 @@ async def fetch_multiple_urls(
         except Exception:
             file_limit = 1024
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(headers={"User-Agent": USER_AGENT}) as session:
         chunks = [urls[x : x + file_limit] for x in range(0, len(urls), file_limit)]
 
         to_retry: list[str] = []
